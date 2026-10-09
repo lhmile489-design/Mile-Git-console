@@ -1,0 +1,174 @@
+/* ============================================================
+   设计令牌 — 单一来源（SoT）
+   所有颜色、字体、间距、阴影、圆角统一在此定义
+   深色模式通过 [data-theme="dark"] 或 prefers-color-scheme 覆盖同名变量
+   ============================================================ */
+
+:root {
+  /* ---------- 主题色 ---------- */
+  --color-primary: #0969da;
+  --color-primary-hover: #0550ae;
+  --color-primary-active: #033d8b;
+
+  /* ---------- 中性色（浅色模式） ---------- */
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #f6f8fa;
+  --color-bg-overlay: #ffffff;
+  --color-bg-sidebar: #f6f8fa;
+
+  /* ---------- 文字色 ---------- */
+  --color-text-primary: #1f2328;
+  --color-text-secondary: #656d76;
+  --color-text-muted: #9198a1;
+  --color-text-on-primary: #ffffff;
+
+  /* ---------- 边框色 ---------- */
+  --color-border-default: #d0d7de;
+  --color-border-muted: #e8ecf0;
+
+  /* ---------- 状态色 ---------- */
+  --color-success: #1a7f37;
+  --color-success-bg: #dafbe1;
+  --color-warning: #9a6700;
+  --color-warning-bg: #fff8c5;
+  --color-danger: #cf222e;
+  --color-danger-bg: #ffebe9;
+  --color-info: #0969da;
+  --color-info-bg: #ddf4ff;
+
+  /* ---------- Git 专用色 ---------- */
+  --color-git-added: #1a7f37;
+  --color-git-removed: #cf222e;
+  --color-git-modified: #9a6700;
+  --color-git-untracked: #0969da;
+  --color-git-conflict: #bc4c00;
+
+  /* ---------- 字体 ---------- */
+  --font-family-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', sans-serif;
+  --font-family-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas',
+    'Courier New', monospace;
+
+  /* ---------- 字号阶梯（仅使用这 6 个值） ---------- */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+
+  /* ---------- 行高 ---------- */
+  --line-height-body: 1.5;
+  --line-height-heading: 1.25;
+  --line-height-code: 1.7;
+
+  /* ---------- 间距（4px 基准网格） ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---------- 圆角 ---------- */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* ---------- 阴影（仅 2 层）---------- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+
+  /* ---------- 动效 ---------- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------- 布局尺寸 ---------- */
+  --sidebar-width: 240px;
+  --titlebar-height: 38px;
+}
+
+/* ============================================================
+   深色模式覆盖（同名变量 override）
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  /* 未显式设置 data-theme 时才跟随系统；显式设置后以 data-theme 为准 */
+  :root:not([data-theme]) {
+    --color-primary: #4493f8;
+    --color-primary-hover: #6cb6ff;
+    --color-primary-active: #a5d6ff;
+
+    --color-bg-base: #0d1117;
+    --color-bg-surface: #161b22;
+    --color-bg-overlay: #1c2128;
+    --color-bg-sidebar: #161b22;
+
+    --color-text-primary: #e6edf3;
+    --color-text-secondary: #848d97;
+    --color-text-muted: #6e7681;
+    --color-text-on-primary: #0d1117;
+
+    --color-border-default: #30363d;
+    --color-border-muted: #21262d;
+
+    --color-success: #3fb950;
+    --color-success-bg: #1c2928;
+    --color-warning: #d29922;
+    --color-warning-bg: #272115;
+    --color-danger: #f85149;
+    --color-danger-bg: #1c1118;
+    --color-info: #4493f8;
+    --color-info-bg: #0c2d6b;
+
+    --color-git-added: #3fb950;
+    --color-git-removed: #f85149;
+    --color-git-modified: #d29922;
+    --color-git-untracked: #4493f8;
+    --color-git-conflict: #db6d28;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* 手动切换深色模式（渲染进程启动时按设置写入 data-theme） */
+[data-theme='dark'] {
+  --color-primary: #4493f8;
+  --color-primary-hover: #6cb6ff;
+  --color-primary-active: #a5d6ff;
+
+  --color-bg-base: #0d1117;
+  --color-bg-surface: #161b22;
+  --color-bg-overlay: #1c2128;
+  --color-bg-sidebar: #161b22;
+
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #848d97;
+  --color-text-muted: #6e7681;
+  --color-text-on-primary: #0d1117;
+
+  --color-border-default: #30363d;
+  --color-border-muted: #21262d;
+
+  --color-success: #3fb950;
+  --color-success-bg: #1c2928;
+  --color-warning: #d29922;
+  --color-warning-bg: #272115;
+  --color-danger: #f85149;
+  --color-danger-bg: #1c1118;
+  --color-info: #4493f8;
+  --color-info-bg: #0c2d6b;
+
+  --color-git-added: #3fb950;
+  --color-git-removed: #f85149;
+  --color-git-modified: #d29922;
+  --color-git-untracked: #4493f8;
+  --color-git-conflict: #db6d28;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
