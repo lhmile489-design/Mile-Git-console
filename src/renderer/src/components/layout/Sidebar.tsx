@@ -1,10 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   ActionButton,
   AlertDialog,
   DialogTrigger
 } from '@adobe/react-spectrum'
-import { Folder, FolderOpen, GitBranch, Plus, X } from 'lucide-react'
+import { Folder, FolderOpen, GitBranch, Plus, Search, X } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import type { RepoItem } from '../../types/ipc'
 
@@ -66,6 +66,11 @@ function Sidebar(): React.ReactElement {
   const repos = useAppStore((s) => s.repos)
   const activeRepoId = useAppStore((s) => s.activeRepoId)
   const importRepo = useAppStore((s) => s.importRepo)
+  const [query, setQuery] = useState('')
+
+  const filtered = query.trim()
+    ? repos.filter((r) => r.name.toLowerCase().includes(query.trim().toLowerCase()))
+    : repos
 
   return (
     <div className="app-sidebar">
@@ -81,16 +86,38 @@ function Sidebar(): React.ReactElement {
             <Plus size={16} />
           </button>
         </div>
+        {/* 搜索框 */}
+        <div className="sidebar-search">
+          <Search size={13} className="sidebar-search-icon" />
+          <input
+            className="sidebar-search-input"
+            type="text"
+            placeholder="搜索仓库…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {query && (
+            <button
+              className="icon-btn sidebar-search-clear"
+              aria-label="清除搜索"
+              onClick={() => setQuery('')}
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
         <div className="sidebar-body">
           {repos.length === 0 ? (
             <div className="sidebar-empty">
               还没有仓库
               <br />
-              点击下方按钮导入一个 Git 仓库
+              点击右上角按钮导入一个 Git 仓库
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="sidebar-empty">无匹配仓库</div>
           ) : (
             <div className="repo-list">
-              {repos.map((repo) => (
+              {filtered.map((repo) => (
                 <RepoItemRow
                   key={repo.id}
                   repo={repo}

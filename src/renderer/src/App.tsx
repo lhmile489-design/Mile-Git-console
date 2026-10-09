@@ -9,6 +9,7 @@ import StatusPanel from './components/git/StatusPanel'
 import CommitPanel from './components/git/CommitPanel'
 import CommitHistory from './components/git/CommitHistory'
 import DiffViewer from './components/git/DiffViewer'
+import SettingsPage from './pages/SettingsPage'
 
 function FeedbackBars(): React.ReactElement | null {
   const error = useAppStore((s) => s.error)
@@ -104,10 +105,41 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
   )
 }
 
+function MainLayout(): React.ReactElement {
+  const activeRepo = useActiveRepo()
+  const mainView = useAppStore((s) => s.mainView)
+
+  return (
+    <div className="app-layout">
+      <Sidebar />
+      <div className="app-main">
+        {activeRepo ? (
+          <>
+            <Toolbar repoName={activeRepo.name} />
+            <FeedbackBars />
+            {mainView === 'changes' ? (
+              <>
+                <div className="changes-layout">
+                  <StatusPanel />
+                  <DiffViewer />
+                </div>
+                <CommitPanel />
+              </>
+            ) : (
+              <CommitHistory />
+            )}
+          </>
+        ) : (
+          <Welcome />
+        )}
+      </div>
+    </div>
+  )
+}
+
 function App(): React.ReactElement {
   const init = useAppStore((s) => s.init)
-  const mainView = useAppStore((s) => s.mainView)
-  const activeRepo = useActiveRepo()
+  const view = useAppStore((s) => s.view)
 
   useEffect(() => {
     void init()
@@ -116,30 +148,7 @@ function App(): React.ReactElement {
   return (
     <>
       <Titlebar />
-      <div className="app-layout">
-        <Sidebar />
-        <div className="app-main">
-          {activeRepo ? (
-            <>
-              <Toolbar repoName={activeRepo.name} />
-              <FeedbackBars />
-              {mainView === 'changes' ? (
-                <>
-                  <div className="changes-layout">
-                    <StatusPanel />
-                    <DiffViewer />
-                  </div>
-                  <CommitPanel />
-                </>
-              ) : (
-                <CommitHistory />
-              )}
-            </>
-          ) : (
-            <Welcome />
-          )}
-        </div>
-      </div>
+      {view === 'settings' ? <SettingsPage /> : <MainLayout />}
     </>
   )
 }

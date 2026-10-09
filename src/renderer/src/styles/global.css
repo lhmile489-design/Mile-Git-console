@@ -1,0 +1,91 @@
+/* ============================================================
+   全局基础样式
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-family-ui);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-body);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* 禁止文字选中（桌面应用体验） */
+  user-select: none;
+}
+
+/* 代码/终端区域允许选中 */
+code,
+pre,
+.selectable {
+  user-select: text;
+  font-family: var(--font-family-mono);
+}
+
+/* 滚动条样式（Webkit） */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* 应用整体布局 */
+.app-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  padding-top: var(--titlebar-height);
+  background-color: var(--color-bg-base);
+}
+
+/* 侧边栏 */
+.app-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  height: 100%;
+  background-color: var(--color-bg-sidebar);
+  border-right: 1px solid var(--color-border-muted);
+  overflow-y: auto;
+}
+
+/* 主内容区 */
+.app-main {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 动效：只允许 transform 和 opacity */
+.transition-fast {
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+.transition-normal {
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+}

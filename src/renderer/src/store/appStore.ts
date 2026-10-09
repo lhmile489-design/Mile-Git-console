@@ -32,6 +32,8 @@ export function isStatusLoading(l: LoadingState): boolean { return l.statusCount
 export function isHistoryLoading(l: LoadingState): boolean { return l.historyCount > 0 }
 export function isDiffLoading(l: LoadingState): boolean { return l.diffCount > 0 }
 
+export type AppView = 'main' | 'settings'
+
 interface AppState {
   // 数据
   repos: RepoItem[]
@@ -45,6 +47,7 @@ interface AppState {
   commitDetailError: string | null
   diff: DiffResult | null
   // 视图
+  view: AppView
   mainView: MainView
   selectedFile: SelectedFile | null
   selectedCommitHash: string | null
@@ -55,6 +58,7 @@ interface AppState {
   notice: string | null
 
   // actions
+  setView: (view: AppView) => void
   init: () => Promise<void>
   importRepo: () => Promise<void>
   removeRepo: (id: number) => Promise<void>
@@ -104,6 +108,7 @@ export const useAppStore = create<AppState>()((set, get) => {
     commitDetail: null,
     commitDetailError: null,
     diff: null,
+    view: 'main',
     mainView: 'changes',
     selectedFile: null,
     selectedCommitHash: null,
@@ -127,6 +132,8 @@ export const useAppStore = create<AppState>()((set, get) => {
         }
       })
     },
+
+    setView: (view) => set({ view }),
 
     importRepo: async () => {
       const picked = await repoApi.openFolderDialog()

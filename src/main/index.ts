@@ -1,10 +1,15 @@
-import { app, shell, BrowserWindow, dialog } from 'electron'
+import { app, shell, BrowserWindow, dialog, nativeImage } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { initDatabase } from './storage/db'
 import { registerAllIpc } from './ipc'
+import { createTray } from './tray'
 
 function createWindow(): void {
+  // 加载应用图标（resources/ 目录，开发模式与生产模式路径一致）
+  const iconPath = join(__dirname, '../../resources/icon.png')
+  const icon = nativeImage.createFromPath(iconPath)
+
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -12,7 +17,11 @@ function createWindow(): void {
     minHeight: 700,
     show: false,
     autoHideMenuBar: true,
-    titleBarStyle: 'hiddenInset',
+    // frame: false 完全隐藏系统原生标题栏，由自定义 Titlebar 组件接管窗口控制
+    frame: false,
+    icon,
+    // 启动时不在 Windows 任务栏显示；窗口显示时通过 setSkipTaskbar(false) 恢复
+    skipTaskbar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       // 安全配置：启用 Chromium 进程沙盒（Electron 20+ 默认值），contextBridge 在沙盒下同样工作正常
@@ -24,6 +33,21 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    // 窗口显示后恢复任务栏图标
+    if (process.platform !== 'darwin') {
+      mainWindow.setSkipTaskbar(false)
+    }
+  })
+
+  // 拦截关闭事件：改为隐藏窗口，应用继续在托盘运行
+  mainWindow.on('close', (event) => {
+    event.preventDefault()
+    mainWindow.hide()
+    if (process.platform !== 'darwin') {
+      mainWindow.setSkipTaskbar(true)
+    } else {
+      app.dock?.hide()
+    }
   })
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -37,6 +61,9 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  // 创建系统托盘（窗口创建完成后再挂载）
+  createTray(mainWindow)
 }
 
 app.whenReady().then(() => {
@@ -69,7 +96,6 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+  // 所有平台：window-all-closed 不主动退出，交给托盘菜单「退出」控制
+  // macOS 通常不退出（app.quit 会在托盘菜单里手动触发）
 })
