@@ -25,7 +25,22 @@ export class GitError extends Error {
 }
 
 function git(repoPath: string): SimpleGit {
-  return simpleGit(repoPath)
+  // simple-git 默认禁止继承以下"不安全"环境变量，必须过滤掉
+  // 否则 fetch/push/pull 会抛 "not permitted without enabling allowUnsafeXxx"
+  const safeEnv = { ...process.env }
+  const unsafeVars = [
+    'GIT_EDITOR', 'GIT_SSH', 'GIT_SSH_COMMAND',
+    'GIT_PROXY_COMMAND', 'GIT_EXEC_PATH',
+    'GIT_ASKPASS', 'SSH_ASKPASS',
+  ]
+  for (const v of unsafeVars) delete safeEnv[v]
+
+  return simpleGit(repoPath).env({
+    ...safeEnv,
+    // 禁止 git 进程弹交互式认证窗口（Electron 子进程无 tty）
+    GIT_TERMINAL_PROMPT: '0',
+    GCM_INTERACTIVE: 'never',  // Git Credential Manager 只用已缓存凭据
+  })
 }
 
 export function isGitRepo(repoPath: string): boolean {
@@ -33,7 +48,7 @@ export function isGitRepo(repoPath: string): boolean {
 }
 
 function isRemoteError(msg: string): boolean {
-  return /could not resolve|failed to connect|connection|network|timed out|unable to access|authentication failed/i.test(
+  return /could not resolve|failed to connect|connection|network|timed out|unable to access|authentication failed|repository not found|permission denied|403|401/i.test(
     msg
   )
 }
