@@ -25,21 +25,25 @@ export class GitError extends Error {
 }
 
 function git(repoPath: string): SimpleGit {
-  // simple-git 默认禁止继承以下"不安全"环境变量，必须过滤掉
-  // 否则 fetch/push/pull 会抛 "not permitted without enabling allowUnsafeXxx"
+  // 过滤 Electron/shell 环境中会干扰 git 子进程的变量：
+  // - GIT_EDITOR / EDITOR / VISUAL：git 需要编辑器时会尝试执行，值无效会报 "not permitted"
+  // - GIT_SSH / GIT_SSH_COMMAND：simple-git 安全检查会拦截
+  // - GIT_ASKPASS / SSH_ASKPASS：same，触发 allowUnsafeAskPass 检查
   const safeEnv = { ...process.env }
-  const unsafeVars = [
-    'GIT_EDITOR', 'GIT_SSH', 'GIT_SSH_COMMAND',
+  const stripVars = [
+    'GIT_EDITOR', 'EDITOR', 'VISUAL',
+    'GIT_SSH', 'GIT_SSH_COMMAND',
     'GIT_PROXY_COMMAND', 'GIT_EXEC_PATH',
     'GIT_ASKPASS', 'SSH_ASKPASS',
   ]
-  for (const v of unsafeVars) delete safeEnv[v]
+  for (const v of stripVars) delete safeEnv[v]
 
   return simpleGit(repoPath).env({
     ...safeEnv,
-    // 禁止 git 进程弹交互式认证窗口（Electron 子进程无 tty）
+    // 强制使用非交互模式：Electron 子进程无 tty，不能弹密码/编辑器窗口
     GIT_TERMINAL_PROMPT: '0',
-    GCM_INTERACTIVE: 'never',  // Git Credential Manager 只用已缓存凭据
+    GCM_INTERACTIVE: 'never',
+    GIT_MERGE_AUTOEDIT: 'no',   // 禁止 merge 时自动打开编辑器
   })
 }
 
