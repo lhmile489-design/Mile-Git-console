@@ -90,7 +90,7 @@ function SettingsPage(): React.ReactElement {
           </div>
           <div className="settings-item">
             <div className="settings-item-label">版本</div>
-            <div className="settings-item-value">0.1.0</div>
+            <div className="settings-item-value">0.2.0</div>
           </div>
           <div className="settings-item">
             <div className="settings-item-label">源代码</div>
