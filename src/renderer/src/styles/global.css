@@ -21,6 +21,7 @@ body,
 body {
   font-family: var(--font-family-ui);
   font-size: var(--text-sm);
+  font-weight: 600;
   line-height: var(--line-height-body);
   color: var(--color-text-primary);
   background-color: var(--color-bg-base);
@@ -36,12 +37,19 @@ pre,
 .selectable {
   user-select: text;
   font-family: var(--font-family-mono);
+  font-weight: 400;
+}
+
+/* 键盘焦点环：全局统一，鼠标点击不显示 */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 /* 滚动条样式（Webkit） */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -49,6 +57,8 @@ pre,
 ::-webkit-scrollbar-thumb {
   background: var(--color-border-default);
   border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
@@ -88,4 +98,20 @@ pre,
 }
 .transition-normal {
   transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+
+/* 临时：React Spectrum Provider 会在根包裹 div 上写死中文字体（回退到 SimSun），
+   用 id 选择器覆盖。阶段 5 移除 Spectrum 后删除本规则 */
+#root > div {
+  font-family: var(--font-family-ui);
+}
+
+/* 系统开启「减少动画」时关闭所有过渡与动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

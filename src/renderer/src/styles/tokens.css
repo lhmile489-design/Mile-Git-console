@@ -1,53 +1,81 @@
 /* ============================================================
    设计令牌 — 单一来源（SoT）
+   风格：进化柔性 UI（见 docs/UI重构文档.md 第 4 节）
    所有颜色、字体、间距、阴影、圆角统一在此定义
    深色模式通过 [data-theme="dark"] 或 prefers-color-scheme 覆盖同名变量
    ============================================================ */
 
 :root {
-  /* ---------- 主题色 ---------- */
-  --color-primary: #0969da;
-  --color-primary-hover: #0550ae;
-  --color-primary-active: #033d8b;
-
-  /* ---------- 中性色（浅色模式） ---------- */
-  --color-bg-base: #ffffff;
-  --color-bg-surface: #f6f8fa;
-  --color-bg-overlay: #ffffff;
-  --color-bg-sidebar: #f6f8fa;
+  /* ---------- 背景层级：base 窗口底色 / surface 卡片 / inset 凹陷区 ---------- */
+  --color-bg-base: #E9EFF6;
+  --color-bg-surface: #FBFDFF;
+  --color-bg-surface-end: #F2F7FC;
+  --color-bg-inset: #E1E9F2;
+  --color-bg-hover: #F1F6FB;
+  --color-bg-selected: #D9EBF8;
+  --color-bg-sidebar: #E9EFF6;
+  --color-bg-overlay: #FBFDFF;
 
   /* ---------- 文字色 ---------- */
-  --color-text-primary: #1f2328;
-  --color-text-secondary: #656d76;
-  --color-text-muted: #9198a1;
-  --color-text-on-primary: #ffffff;
+  --color-text-primary: #1F2A37;
+  --color-text-secondary: #43566B;
+  --color-text-muted: #56677A;
+  --color-text-on-primary: #FFFFFF;
 
-  /* ---------- 边框色 ---------- */
-  --color-border-default: #d0d7de;
-  --color-border-muted: #e8ecf0;
+  /* ---------- 主题色 ---------- */
+  --color-primary: #0F609B;
+  --color-primary-hover: #0B4A73;
+  --color-primary-active: #093D60;
+  --color-primary-soft: #D9EBF8;
+  --color-primary-start: #1573B4;
 
-  /* ---------- 状态色 ---------- */
-  --color-success: #1a7f37;
-  --color-success-bg: #dafbe1;
-  --color-warning: #9a6700;
-  --color-warning-bg: #fff8c5;
-  --color-danger: #cf222e;
-  --color-danger-bg: #ffebe9;
-  --color-info: #0969da;
-  --color-info-bg: #ddf4ff;
+  /* ---------- 边框：default 仅用于装饰性分隔（1.44:1），控件边界用 strong（≥3:1） ---------- */
+  --color-border-default: #C9D7E4;
+  --color-border-muted: #DCE5EE;
+  --color-border-strong: #687B8F;
+  --color-border-highlight: #FFFFFF;
 
-  /* ---------- Git 专用色 ---------- */
-  --color-git-added: #1a7f37;
-  --color-git-removed: #cf222e;
-  --color-git-modified: #9a6700;
-  --color-git-untracked: #0969da;
-  --color-git-conflict: #bc4c00;
+  /* ---------- 危险色 ---------- */
+  --color-danger: #B4233C;
+  --color-danger-bg: #FFE3E9;
 
-  /* ---------- 字体 ---------- */
-  --font-family-ui: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Microsoft YaHei', sans-serif;
-  --font-family-mono: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', 'Consolas',
-    'Courier New', monospace;
+  /* ---------- Git 状态：前景色 + 浅底 ---------- */
+  --color-git-added: #1C5E2A;
+  --color-git-added-bg: #DFF7DF;
+  --color-git-removed: #93283C;
+  --color-git-removed-bg: #FFE3E9;
+  --color-git-modified: #7A5000;
+  --color-git-modified-bg: #FFF1CC;
+  --color-git-untracked: #0B4A73;
+  --color-git-untracked-bg: #D9EFFA;
+  --color-git-conflict: #8F3608;
+  --color-git-conflict-bg: #FFE6D5;
+
+  /* ---------- Diff 行底色 ---------- */
+  --color-diff-add-line: #E6F6E6;
+  --color-diff-del-line: #FDEBEE;
+
+  /* ---------- 阴影：凸起 / 凹陷 / 高光 ---------- */
+  --shadow-raise: 0 2px 4px rgba(31, 42, 55, 0.08), 0 12px 28px -12px rgba(31, 42, 55, 0.22);
+  --shadow-raise-hover: 0 4px 8px rgba(31, 42, 55, 0.08), 0 20px 36px -14px rgba(31, 42, 55, 0.28);
+  --shadow-press: inset 0 2px 6px rgba(31, 42, 55, 0.14);
+  --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --shadow-primary: 0 2px 4px rgba(15, 96, 155, 0.35), 0 12px 22px -10px rgba(15, 96, 155, 0.55);
+
+  /* ---------- 兼容别名：components.css 仍在引用，阶段 4 改造完后删除 ---------- */
+  --color-success: var(--color-git-added);
+  --color-success-bg: var(--color-git-added-bg);
+  --color-warning: var(--color-git-modified);
+  --color-warning-bg: var(--color-git-modified-bg);
+  --color-info: var(--color-primary);
+  --color-info-bg: var(--color-primary-soft);
+  --shadow-sm: var(--shadow-raise);
+  --shadow-md: var(--shadow-raise-hover);
+
+  /* ---------- 字体（Nunito 本地打包，中文回退系统字体） ---------- */
+  --font-family-ui: 'Nunito', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
+    system-ui, sans-serif;
+  --font-family-mono: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
 
   /* ---------- 字号阶梯（仅使用这 6 个值） ---------- */
   --text-xs: 12px;
@@ -56,6 +84,12 @@
   --text-lg: 20px;
   --text-xl: 24px;
   --text-2xl: 32px;
+
+  /* ---------- 字重 ---------- */
+  --font-weight-regular: 400;
+  --font-weight-body: 600;
+  --font-weight-bold: 700;
+  --font-weight-heavy: 800;
 
   /* ---------- 行高 ---------- */
   --line-height-body: 1.5;
@@ -73,102 +107,126 @@
   --space-16: 64px;
 
   /* ---------- 圆角 ---------- */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
   --radius-pill: 999px;
 
-  /* ---------- 阴影（仅 2 层）---------- */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
-
   /* ---------- 动效 ---------- */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-soft: cubic-bezier(0.33, 1, 0.45, 1);
+  --transition-fast: 150ms var(--ease-soft);
+  --transition-normal: 240ms var(--ease-soft);
+  --transition-slow: 300ms var(--ease-soft);
 
   /* ---------- 布局尺寸 ---------- */
   --sidebar-width: 240px;
   --titlebar-height: 38px;
+  --panel-gap: 12px;
 }
 
 /* ============================================================
-   深色模式覆盖（同名变量 override）
+   深色模式（同名变量覆盖）
+   跟随系统与手动切换两处必须保持同一组值
    ============================================================ */
 @media (prefers-color-scheme: dark) {
   /* 未显式设置 data-theme 时才跟随系统；显式设置后以 data-theme 为准 */
   :root:not([data-theme]) {
-    --color-primary: #4493f8;
-    --color-primary-hover: #6cb6ff;
-    --color-primary-active: #a5d6ff;
+    --color-bg-base: #161C24;
+    --color-bg-surface: #1E2631;
+    --color-bg-surface-end: #1A212B;
+    --color-bg-inset: #121820;
+    --color-bg-hover: #252F3C;
+    --color-bg-selected: #17324A;
+    --color-bg-sidebar: #161C24;
+    --color-bg-overlay: #1E2631;
 
-    --color-bg-base: #0d1117;
-    --color-bg-surface: #161b22;
-    --color-bg-overlay: #1c2128;
-    --color-bg-sidebar: #161b22;
+    --color-text-primary: #E4EBF3;
+    --color-text-secondary: #A9B7C6;
+    --color-text-muted: #8D9CAE;
+    --color-text-on-primary: #0B1A27;
 
-    --color-text-primary: #e6edf3;
-    --color-text-secondary: #848d97;
-    --color-text-muted: #6e7681;
-    --color-text-on-primary: #0d1117;
+    --color-primary: #5AA9E6;
+    --color-primary-hover: #A9D3F5;
+    --color-primary-active: #CFE6FA;
+    --color-primary-soft: #17324A;
+    --color-primary-start: #7BBCEC;
 
-    --color-border-default: #30363d;
-    --color-border-muted: #21262d;
+    --color-border-default: #2C3745;
+    --color-border-muted: #232C38;
+    --color-border-strong: #7A8CA0;
+    --color-border-highlight: rgba(255, 255, 255, 0.06);
 
-    --color-success: #3fb950;
-    --color-success-bg: #1c2928;
-    --color-warning: #d29922;
-    --color-warning-bg: #272115;
-    --color-danger: #f85149;
-    --color-danger-bg: #1c1118;
-    --color-info: #4493f8;
-    --color-info-bg: #0c2d6b;
+    --color-danger: #FF7A8A;
+    --color-danger-bg: #3A1C25;
 
-    --color-git-added: #3fb950;
-    --color-git-removed: #f85149;
-    --color-git-modified: #d29922;
-    --color-git-untracked: #4493f8;
-    --color-git-conflict: #db6d28;
+    --color-git-added: #7BD88F;
+    --color-git-added-bg: #183224;
+    --color-git-removed: #FF8FA3;
+    --color-git-removed-bg: #3A1C25;
+    --color-git-modified: #F2C14E;
+    --color-git-modified-bg: #33290F;
+    --color-git-untracked: #7DC4F0;
+    --color-git-untracked-bg: #14304A;
+    --color-git-conflict: #FFA26B;
+    --color-git-conflict-bg: #3A2414;
 
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --color-diff-add-line: #1B3326;
+    --color-diff-del-line: #3A1F27;
+
+    --shadow-raise: 0 2px 4px rgba(0, 0, 0, 0.30), 0 12px 28px -12px rgba(0, 0, 0, 0.60);
+    --shadow-raise-hover: 0 4px 8px rgba(0, 0, 0, 0.30), 0 20px 36px -14px rgba(0, 0, 0, 0.70);
+    --shadow-press: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+    --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    --shadow-primary: 0 2px 4px rgba(0, 0, 0, 0.35), 0 10px 20px -10px rgba(90, 169, 230, 0.45);
   }
 }
 
-/* 手动切换深色模式（渲染进程启动时按设置写入 data-theme） */
 [data-theme='dark'] {
-  --color-primary: #4493f8;
-  --color-primary-hover: #6cb6ff;
-  --color-primary-active: #a5d6ff;
+  --color-bg-base: #161C24;
+  --color-bg-surface: #1E2631;
+  --color-bg-surface-end: #1A212B;
+  --color-bg-inset: #121820;
+  --color-bg-hover: #252F3C;
+  --color-bg-selected: #17324A;
+  --color-bg-sidebar: #161C24;
+  --color-bg-overlay: #1E2631;
 
-  --color-bg-base: #0d1117;
-  --color-bg-surface: #161b22;
-  --color-bg-overlay: #1c2128;
-  --color-bg-sidebar: #161b22;
+  --color-text-primary: #E4EBF3;
+  --color-text-secondary: #A9B7C6;
+  --color-text-muted: #8D9CAE;
+  --color-text-on-primary: #0B1A27;
 
-  --color-text-primary: #e6edf3;
-  --color-text-secondary: #848d97;
-  --color-text-muted: #6e7681;
-  --color-text-on-primary: #0d1117;
+  --color-primary: #5AA9E6;
+  --color-primary-hover: #A9D3F5;
+  --color-primary-active: #CFE6FA;
+  --color-primary-soft: #17324A;
+  --color-primary-start: #7BBCEC;
 
-  --color-border-default: #30363d;
-  --color-border-muted: #21262d;
+  --color-border-default: #2C3745;
+  --color-border-muted: #232C38;
+  --color-border-strong: #7A8CA0;
+  --color-border-highlight: rgba(255, 255, 255, 0.06);
 
-  --color-success: #3fb950;
-  --color-success-bg: #1c2928;
-  --color-warning: #d29922;
-  --color-warning-bg: #272115;
-  --color-danger: #f85149;
-  --color-danger-bg: #1c1118;
-  --color-info: #4493f8;
-  --color-info-bg: #0c2d6b;
+  --color-danger: #FF7A8A;
+  --color-danger-bg: #3A1C25;
 
-  --color-git-added: #3fb950;
-  --color-git-removed: #f85149;
-  --color-git-modified: #d29922;
-  --color-git-untracked: #4493f8;
-  --color-git-conflict: #db6d28;
+  --color-git-added: #7BD88F;
+  --color-git-added-bg: #183224;
+  --color-git-removed: #FF8FA3;
+  --color-git-removed-bg: #3A1C25;
+  --color-git-modified: #F2C14E;
+  --color-git-modified-bg: #33290F;
+  --color-git-untracked: #7DC4F0;
+  --color-git-untracked-bg: #14304A;
+  --color-git-conflict: #FFA26B;
+  --color-git-conflict-bg: #3A2414;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --color-diff-add-line: #1B3326;
+  --color-diff-del-line: #3A1F27;
+
+  --shadow-raise: 0 2px 4px rgba(0, 0, 0, 0.30), 0 12px 28px -12px rgba(0, 0, 0, 0.60);
+  --shadow-raise-hover: 0 4px 8px rgba(0, 0, 0, 0.30), 0 20px 36px -14px rgba(0, 0, 0, 0.70);
+  --shadow-press: inset 0 2px 6px rgba(0, 0, 0, 0.45);
+  --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-primary: 0 2px 4px rgba(0, 0, 0, 0.35), 0 10px 20px -10px rgba(90, 169, 230, 0.45);
 }
