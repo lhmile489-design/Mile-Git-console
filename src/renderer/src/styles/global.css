@@ -2,6 +2,21 @@
    全局基础样式
    ============================================================ */
 
+/* 中文字体别名：微软雅黑 UI 只有 400 / 700 两个字重，正文的 600 会被浏览器落到 Bold。
+   这里把 400–600 显式映射到常规体，700 及以上才用粗体；英文仍由 Nunito 负责 */
+@font-face {
+  font-family: 'Mile CJK';
+  src: local('Microsoft YaHei UI'), local('MicrosoftYaHeiUI'), local('PingFang SC'),
+    local('PingFangSC-Regular');
+  font-weight: 100 600;
+}
+@font-face {
+  font-family: 'Mile CJK';
+  src: local('Microsoft YaHei UI Bold'), local('MicrosoftYaHeiUI-Bold'),
+    local('PingFang SC Semibold'), local('PingFangSC-Semibold');
+  font-weight: 700 900;
+}
+
 *,
 *::before,
 *::after {
@@ -146,4 +161,9 @@ pre,
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Lucide 图标统一 1.75 线宽，比默认 2 更贴近柔性 UI 的细线风格 */
+.lucide {
+  stroke-width: 1.75;
 }

@@ -74,7 +74,7 @@
   --shadow-md: var(--shadow-raise-hover);
 
   /* ---------- 字体（Nunito 本地打包，中文回退系统字体） ---------- */
-  --font-family-ui: 'Nunito', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
+  --font-family-ui: 'Nunito', 'Mile CJK', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei',
     system-ui, sans-serif;
   --font-family-mono: 'Cascadia Code', 'JetBrains Mono', 'Consolas', monospace;
 
