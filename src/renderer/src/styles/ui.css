@@ -458,3 +458,13 @@ textarea.ui-input {
   font-weight: var(--font-weight-heavy);
   color: var(--color-text-primary);
 }
+.empty-state-text {
+  max-width: 32em;
+  color: var(--color-text-muted);
+  user-select: text;
+  word-break: break-word;
+}
+.empty-state-icon.is-danger {
+  color: var(--color-danger);
+  background: var(--color-danger-bg);
+}

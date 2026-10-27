@@ -771,83 +771,136 @@
   color: var(--color-danger);
 }
 
-/* ---------- 提交区 ---------- */
+/* ---------- 提交区（文件列表卡片底部） ---------- */
 .commit-panel {
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3);
   border-top: 1px solid var(--color-border-default);
 }
-.commit-input,
 .commit-textarea {
+  min-height: 56px;
+  max-height: 160px;
+}
+.commit-submit {
   width: 100%;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-xs);
-  font-family: var(--font-family-ui);
-  color: var(--color-text-primary);
-  background-color: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
-  outline: none;
 }
-.commit-input::placeholder,
-.commit-textarea::placeholder {
-  color: var(--color-text-muted);
-}
-.commit-input:focus,
-.commit-textarea:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
-}
-.commit-textarea {
-  resize: none;
-  line-height: var(--line-height-body);
-}
-.commit-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.commit-staged-count {
+.commit-hint {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* ---------- Diff 查看器 ---------- */
+/* ---------- Diff 查看器：卡片头 + 凹陷代码区 ---------- */
 .diff-viewer {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.diff-scroll {
+.diff-header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-4);
+}
+.diff-header-path {
   flex: 1;
-  overflow: auto;
+  min-width: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  direction: rtl;
+  text-align: left;
+}
+.diff-stats {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-inset);
   font-family: var(--font-family-mono);
   font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
+}
+.diff-header-action {
+  flex-shrink: 0;
+}
+.diff-well {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin: 0 var(--space-3) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-inset);
+  box-shadow: var(--shadow-press);
+  overflow: hidden;
+}
+.diff-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2) 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
   line-height: var(--line-height-code);
+}
+.diff-hunk + .diff-hunk {
+  margin-top: var(--space-2);
 }
 .diff-hunk-header {
   padding: var(--space-1) var(--space-3);
-  color: var(--color-info);
-  background-color: color-mix(in srgb, var(--color-info) 10%, transparent);
+}
+.diff-hunk-pill {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  font-weight: var(--font-weight-bold);
   white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
   user-select: text;
 }
 .diff-line {
   display: flex;
+  min-width: max-content;
   white-space: pre;
+  color: var(--color-text-primary);
 }
 .diff-line-no {
   flex-shrink: 0;
-  width: 40px;
+  width: 44px;
   padding-right: var(--space-2);
   text-align: right;
-  font-size: 11px;
   color: var(--color-text-muted);
+  user-select: none;
+}
+.diff-line-sign {
+  flex-shrink: 0;
+  width: var(--space-4);
+  text-align: center;
   user-select: none;
 }
 .diff-line-content {
@@ -855,47 +908,54 @@
   padding-right: var(--space-4);
   user-select: text;
 }
-.diff-line-sign {
-  display: inline-block;
-  width: var(--space-3);
-  flex-shrink: 0;
-}
 .diff-line.added {
-  background-color: color-mix(in srgb, var(--color-git-added) 15%, transparent);
+  background: var(--color-diff-add-line);
 }
 .diff-line.added .diff-line-sign {
   color: var(--color-git-added);
 }
 .diff-line.removed {
-  background-color: color-mix(in srgb, var(--color-git-removed) 15%, transparent);
+  background: var(--color-diff-del-line);
 }
 .diff-line.removed .diff-line-sign {
   color: var(--color-git-removed);
 }
 
-/* ---------- 历史视图 ---------- */
+/* ---------- 历史视图：提交列表 ---------- */
 .commit-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-2);
+  padding: var(--space-3) var(--space-2);
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 .commit-row {
   position: relative;
   display: flex;
+  align-items: stretch;
   gap: var(--space-3);
-  padding: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border: none;
   border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-family-ui);
+  text-align: left;
   cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 .commit-row:hover {
-  background-color: var(--color-bg-surface);
+  background: var(--color-bg-hover);
 }
 .commit-row.selected {
-  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  box-shadow: inset 2px 0 0 var(--color-primary);
+  background: var(--color-bg-selected);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+.commit-row:focus-visible {
+  outline-offset: -2px;
 }
 .commit-graph {
   position: relative;
@@ -904,33 +964,37 @@
 }
 .commit-graph-line {
   position: absolute;
-  top: 0;
-  bottom: calc(-1 * var(--space-2));
+  top: calc(-1 * var(--space-2));
+  bottom: calc(-1 * var(--space-2) - 2px);
   left: 50%;
-  width: 1px;
+  width: 2px;
   transform: translateX(-50%);
-  background-color: var(--color-border-default);
+  border-radius: var(--radius-pill);
+  background: var(--color-border-default);
+}
+.commit-row:first-of-type .commit-graph-line {
+  top: 50%;
 }
 .commit-row:last-of-type .commit-graph-line {
   bottom: 50%;
 }
-.commit-row:first-of-type .commit-graph-line {
-  top: 50%;
+.commit-row:only-of-type .commit-graph-line {
+  display: none;
 }
 .commit-graph-dot {
   position: absolute;
   top: var(--space-2);
   left: 50%;
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   transform: translateX(-50%);
   border-radius: var(--radius-pill);
-  background-color: var(--color-text-muted);
-  border: 2px solid var(--color-bg-base);
-  z-index: 1;
+  background: var(--color-text-muted);
+  box-shadow: 0 0 0 2px var(--color-bg-surface);
 }
-.commit-row:first-of-type .commit-graph-dot {
-  background-color: var(--color-primary);
+.commit-row:first-of-type .commit-graph-dot,
+.commit-row.selected .commit-graph-dot {
+  background: var(--color-primary);
 }
 .commit-row-info {
   flex: 1;
@@ -940,8 +1004,8 @@
   gap: 2px;
 }
 .commit-message {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-body);
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -951,12 +1015,15 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: 11px;
+  min-width: 0;
+  font-size: var(--text-xs);
   color: var(--color-text-muted);
+  white-space: nowrap;
   overflow: hidden;
 }
 .commit-hash {
   font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-regular);
 }
 .commit-tags {
   display: flex;
@@ -965,40 +1032,65 @@
   flex-shrink: 0;
 }
 .commit-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
   padding: 0 var(--space-2);
-  font-size: 11px;
-  color: var(--color-text-on-primary);
-  background-color: var(--color-primary);
   border-radius: var(--radius-pill);
+  background: var(--color-git-untracked-bg);
+  color: var(--color-git-untracked);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-heavy);
+  box-shadow: var(--shadow-highlight);
+}
+.commit-list-loading {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+  color: var(--color-text-muted);
 }
 .load-more-wrap {
+  display: flex;
+  justify-content: center;
   padding: var(--space-2);
-}
-.load-more-wrap .btn {
-  width: 100%;
 }
 
 /* ---------- 提交详情 ---------- */
 .commit-detail {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
+/* 浮起的摘要区：卡片内唯一的凸起块，用阴影区分，不再套卡片边框 */
 .commit-detail-header {
   flex-shrink: 0;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border-muted);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  margin: var(--space-3) var(--space-3) 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise), var(--shadow-highlight);
 }
 .commit-detail-message {
   font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--color-text-primary);
+  font-weight: var(--font-weight-heavy);
   line-height: var(--line-height-heading);
+  color: var(--color-text-primary);
+  word-break: break-word;
+}
+.commit-detail-description {
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: var(--text-sm);
+  line-height: var(--line-height-body);
+  color: var(--color-text-secondary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .commit-detail-meta-row {
   display: flex;
@@ -1010,30 +1102,37 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--color-text-secondary);
   min-width: 0;
 }
+.commit-detail-author-text {
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .commit-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--color-text-on-primary);
-  background-color: var(--color-primary);
   border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
+  color: var(--color-text-on-primary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-heavy);
+  box-shadow: var(--shadow-highlight);
 }
 .commit-detail-stats {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--text-xs);
-  font-family: var(--font-family-mono);
   flex-shrink: 0;
+  font-family: var(--font-family-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
 }
 .stat-add {
   color: var(--color-git-added);
@@ -1043,47 +1142,62 @@
 }
 .stat-hash {
   color: var(--color-text-muted);
+  font-family: var(--font-family-mono);
+  font-weight: var(--font-weight-regular);
 }
 .commit-file-list {
   flex-shrink: 0;
-  max-height: 220px;
+  max-height: 200px;
   overflow-y: auto;
-  padding: var(--space-2);
-  border-bottom: 1px solid var(--color-border-muted);
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2);
 }
 .commit-file-row {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2);
+  width: 100%;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: none;
   border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-family-ui);
+  text-align: left;
   cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 .commit-file-row:hover {
-  background-color: var(--color-bg-surface);
+  background: var(--color-bg-hover);
 }
 .commit-file-row.selected {
-  background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
-  box-shadow: inset 2px 0 0 var(--color-primary);
+  background: var(--color-bg-selected);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+.commit-file-row:focus-visible {
+  outline-offset: -2px;
 }
 .commit-file-path {
   flex: 1;
   min-width: 0;
   font-family: var(--font-family-mono);
   font-size: var(--text-xs);
+  font-weight: var(--font-weight-regular);
   color: var(--color-text-primary);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .commit-file-stats {
   flex-shrink: 0;
   display: flex;
   gap: var(--space-2);
-  font-size: 11px;
   font-family: var(--font-family-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
 }
 
 /* ---------- 欢迎空态 ---------- */

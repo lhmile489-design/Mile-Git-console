@@ -46,13 +46,17 @@ body {
   user-select: none;
 }
 
-/* 代码/终端区域允许选中 */
+/* 代码区域：等宽字体 + 允许选中 */
 code,
-pre,
-.selectable {
+pre {
   user-select: text;
   font-family: var(--font-family-mono);
   font-weight: 400;
+}
+
+/* 仅允许选中文字，不改字体（提交信息等正文用 UI 字体，diff 自己设等宽） */
+.selectable {
+  user-select: text;
 }
 
 /* 键盘焦点环：全局统一，鼠标点击不显示 */

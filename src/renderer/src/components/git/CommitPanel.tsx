@@ -1,6 +1,8 @@
+// 提交区：位于文件列表卡片底部，只针对暂存区的文件
 import React, { useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Loader2 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
+import { Button } from '../common'
 
 function CommitPanel(): React.ReactElement {
   const gitStatus = useAppStore((s) => s.gitStatus)
@@ -12,7 +14,16 @@ function CommitPanel(): React.ReactElement {
 
   const stagedCount = (gitStatus?.files ?? []).filter((f) => f.staged).length
   const branch = gitStatus?.branch ?? ''
-  const canCommit = summary.trim().length > 0 && stagedCount > 0 && !submitting
+  const hasSummary = summary.trim().length > 0
+  const canCommit = hasSummary && stagedCount > 0 && !submitting
+
+  // 按钮禁用时在下方说明原因
+  const hint =
+    stagedCount === 0
+      ? '暂存区为空，先暂存要提交的文件'
+      : !hasSummary
+        ? '填写提交摘要后即可提交'
+        : `将提交到 ${branch}`
 
   const handleCommit = async (): Promise<void> => {
     if (!canCommit) return
@@ -31,8 +42,9 @@ function CommitPanel(): React.ReactElement {
   return (
     <div className="commit-panel">
       <input
-        className="commit-input"
-        placeholder="摘要（必填）"
+        className="ui-input"
+        aria-label="提交摘要"
+        placeholder="提交摘要（必填）"
         value={summary}
         onChange={(e) => setSummary(e.target.value)}
         onKeyDown={(e) => {
@@ -40,23 +52,28 @@ function CommitPanel(): React.ReactElement {
         }}
       />
       <textarea
-        className="commit-textarea"
-        rows={3}
-        placeholder="描述（可选）"
+        className="ui-input commit-textarea"
+        aria-label="提交描述"
+        rows={2}
+        placeholder="详细描述（可选，Ctrl+Enter 提交）"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void handleCommit()
+        }}
       />
-      <div className="commit-footer">
-        <span className="commit-staged-count">{stagedCount} 个文件已暂存</span>
-        <button
-          className="btn btn-primary"
-          disabled={!canCommit}
-          onClick={() => void handleCommit()}
-        >
-          <Check size={14} />
-          提交到 {branch}
-        </button>
-      </div>
+      <Button
+        variant="primary"
+        className="commit-submit"
+        isDisabled={!canCommit}
+        onPress={() => void handleCommit()}
+      >
+        {submitting ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
+        {stagedCount > 0 ? `提交 ${stagedCount} 个文件` : '提交'}
+      </Button>
+      <span className="commit-hint" title={hint}>
+        {hint}
+      </span>
     </div>
   )
 }
