@@ -10,6 +10,7 @@ import '@fontsource/nunito/latin-700.css'
 import '@fontsource/nunito/latin-800.css'
 import './styles/tokens.css'
 import './styles/global.css'
+import './styles/ui.css'
 import './styles/components.css'
 
 type ColorScheme = 'light' | 'dark'

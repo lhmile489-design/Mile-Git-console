@@ -1,0 +1,11 @@
+// 基础组件统一出口：业务组件从这里 import，不直接引用 react-aria-components
+export { default as Button } from './Button'
+export type { ButtonProps, ButtonVariant, ButtonSize } from './Button'
+export { default as IconButton } from './IconButton'
+export type { IconButtonProps } from './IconButton'
+export { default as ConfirmDialog } from './ConfirmDialog'
+export type { ConfirmDialogProps } from './ConfirmDialog'
+export { default as Segmented } from './Segmented'
+export type { SegmentedOption, SegmentedProps } from './Segmented'
+export { default as Panel } from './Panel'
+export type { PanelProps } from './Panel'
