@@ -64,30 +64,60 @@ pre,
   background: var(--color-text-muted);
 }
 
-/* 应用整体布局 */
+/* 应用整体布局：窗口底色上浮起若干卡片，卡片之间露出 --panel-gap 的背景缝隙 */
 .app-layout {
   display: flex;
+  gap: var(--panel-gap);
   height: 100%;
   width: 100%;
-  padding-top: var(--titlebar-height);
+  padding: var(--titlebar-height) var(--panel-gap) var(--panel-gap);
   background-color: var(--color-bg-base);
 }
 
-/* 侧边栏 */
+/* 侧边栏（卡片样式来自 .ui-panel） */
 .app-sidebar {
   width: var(--sidebar-width);
   flex-shrink: 0;
   height: 100%;
-  background-color: var(--color-bg-sidebar);
-  border-right: 1px solid var(--color-border-muted);
   overflow-y: auto;
 }
 
 /* 主内容区 */
 .app-main {
   flex: 1;
+  min-width: 0;
   height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--panel-gap);
+}
+
+/* 两栏工作区：列表卡片 + 拖拽手柄 + 详情卡片（手柄本身就是两卡片之间的缝隙） */
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.workspace-list {
+  width: var(--file-list-width);
+  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.workspace-detail {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 变更视图左栏：文件列表在上，提交区固定在卡片底部 */
+.changes-list {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -101,8 +131,10 @@ pre,
 }
 
 /* 临时：React Spectrum Provider 会在根包裹 div 上写死中文字体（回退到 SimSun），
-   用 id 选择器覆盖。阶段 5 移除 Spectrum 后删除本规则 */
+   用 id 选择器覆盖；它也没有高度，导致下层 height: 100% 全部失效，这里一并补上。
+   阶段 5 移除 Spectrum 后删除本规则，并给 #root 直接子节点保留 height: 100% */
 #root > div {
+  height: 100%;
   font-family: var(--font-family-ui);
 }
 

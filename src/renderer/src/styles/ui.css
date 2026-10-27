@@ -305,3 +305,36 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ---------- 拖拽手柄（同时充当两张卡片之间的缝隙） ---------- */
+.ui-resize-handle {
+  position: relative;
+  width: var(--panel-gap);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: col-resize;
+  outline: none;
+  touch-action: none;
+}
+.ui-resize-handle-grip {
+  width: 4px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-border-strong);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+.ui-resize-handle:hover .ui-resize-handle-grip {
+  opacity: 0.6;
+}
+.ui-resize-handle:active .ui-resize-handle-grip,
+.ui-resize-handle:focus-visible .ui-resize-handle-grip {
+  opacity: 1;
+  background-color: var(--color-primary);
+}
+.ui-resize-handle:focus-visible {
+  outline: none;
+}

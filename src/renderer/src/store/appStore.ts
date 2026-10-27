@@ -12,6 +12,7 @@ import type {
 } from '../types/ipc'
 import * as repoApi from '../api/repo'
 import * as gitApi from '../api/git'
+import * as settingsApi from '../api/settings'
 
 /**
  * LoadingState 用引用计数代替 boolean，解决并发竞态：
@@ -56,6 +57,8 @@ interface AppState {
   loading: LoadingState
   error: string | null
   notice: string | null
+  // 布局：文件列表（及历史提交列表）卡片宽度，持久化到设置 layout.fileListWidth
+  fileListWidth: number
 
   // actions
   setView: (view: AppView) => void
@@ -81,6 +84,18 @@ interface AppState {
   switchBranch: (name: string) => Promise<void>
   deleteBranch: (name: string, force?: boolean) => Promise<void>
   clearFeedback: () => void
+  setFileListWidth: (width: number) => void
+  persistFileListWidth: () => Promise<void>
+}
+
+export const FILE_LIST_WIDTH_MIN = 240
+export const FILE_LIST_WIDTH_MAX = 480
+const FILE_LIST_WIDTH_DEFAULT = 320
+const FILE_LIST_WIDTH_KEY = 'layout.fileListWidth'
+
+function clampFileListWidth(width: number): number {
+  if (!Number.isFinite(width)) return FILE_LIST_WIDTH_DEFAULT
+  return Math.round(Math.min(FILE_LIST_WIDTH_MAX, Math.max(FILE_LIST_WIDTH_MIN, width)))
 }
 
 function activeRepoPath(state: AppState): string | null {
@@ -122,8 +137,16 @@ export const useAppStore = create<AppState>()((set, get) => {
     },
     error: null,
     notice: null,
+    fileListWidth: FILE_LIST_WIDTH_DEFAULT,
 
     init: async () => {
+      // 布局宽度读取失败不影响启动，保持默认值
+      void settingsApi
+        .getSetting(FILE_LIST_WIDTH_KEY)
+        .then((v) => {
+          if (typeof v === 'number') set({ fileListWidth: clampFileListWidth(v) })
+        })
+        .catch(() => {})
       await run(async () => {
         const repos = await repoApi.listRepos()
         set({ repos })
@@ -429,7 +452,18 @@ export const useAppStore = create<AppState>()((set, get) => {
       await get().refreshBranches()
     },
 
-    clearFeedback: () => set({ error: null, notice: null })
+    clearFeedback: () => set({ error: null, notice: null }),
+
+    // 拖拽过程中只改内存状态，松手时再持久化，避免每帧写一次设置文件
+    setFileListWidth: (width) => set({ fileListWidth: clampFileListWidth(width) }),
+
+    persistFileListWidth: async () => {
+      try {
+        await settingsApi.setSetting(FILE_LIST_WIDTH_KEY, get().fileListWidth)
+      } catch {
+        // 宽度保存失败不提示，下次启动回到默认宽度
+      }
+    }
   }
 })
 

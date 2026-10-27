@@ -10,6 +10,8 @@ import CommitPanel from './components/git/CommitPanel'
 import CommitHistory from './components/git/CommitHistory'
 import DiffViewer from './components/git/DiffViewer'
 import SettingsPage from './pages/SettingsPage'
+import Workspace from './components/layout/Workspace'
+import { Panel } from './components/common'
 
 function FeedbackBars(): React.ReactElement | null {
   const error = useAppStore((s) => s.error)
@@ -72,7 +74,7 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
   const loadingStatus = isStatusLoading(useAppStore((s) => s.loading))
 
   return (
-    <div className="toolbar">
+    <Panel className="toolbar">
       <span className="toolbar-repo-name">{repoName}</span>
       <BranchSelector />
       <ActionBar />
@@ -101,7 +103,7 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
       >
         <RefreshCw size={15} className={loadingStatus ? 'spin' : undefined} />
       </button>
-    </div>
+    </Panel>
   )
 }
 
@@ -118,13 +120,17 @@ function MainLayout(): React.ReactElement {
             <Toolbar repoName={activeRepo.name} />
             <FeedbackBars />
             {mainView === 'changes' ? (
-              <>
-                <div className="changes-layout">
-                  <StatusPanel />
-                  <DiffViewer />
-                </div>
-                <CommitPanel />
-              </>
+              <Workspace
+                listLabel="文件变更"
+                detailLabel="文件差异"
+                list={
+                  <div className="changes-list">
+                    <StatusPanel />
+                    <CommitPanel />
+                  </div>
+                }
+                detail={<DiffViewer />}
+              />
             ) : (
               <CommitHistory />
             )}

@@ -6,6 +6,7 @@ import {
 } from '@adobe/react-spectrum'
 import { Folder, FolderOpen, GitBranch, Plus, Search, X } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
+import { Panel } from '../common'
 import type { RepoItem } from '../../types/ipc'
 
 interface RepoItemRowProps {
@@ -73,7 +74,7 @@ function Sidebar(): React.ReactElement {
     : repos
 
   return (
-    <div className="app-sidebar">
+    <Panel as="aside" className="app-sidebar" aria-label="仓库列表">
       <div className="sidebar">
         <div className="sidebar-header">
           <span className="sidebar-title">仓库列表</span>
@@ -137,7 +138,7 @@ function Sidebar(): React.ReactElement {
           </button>
         </div>
       </div>
-    </div>
+    </Panel>
   )
 }
 

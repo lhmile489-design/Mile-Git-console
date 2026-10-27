@@ -3,6 +3,7 @@ import { GitCommitHorizontal, Loader2 } from 'lucide-react'
 import { useAppStore, isHistoryLoading } from '../../store/appStore'
 import { StatusBadge } from './StatusPanel'
 import DiffViewer from './DiffViewer'
+import Workspace from '../layout/Workspace'
 import type { CommitEntry } from '../../types/ipc'
 
 function formatRelativeTime(dateStr: string): string {
@@ -153,42 +154,43 @@ function CommitHistory(): React.ReactElement {
   const selectedCommitHash = useAppStore((s) => s.selectedCommitHash)
   const loadHistory = useAppStore((s) => s.loadHistory)
 
-  return (
-    <div className="history-layout">
-      <div className="commit-list">
-        {commits.length === 0 && !loadingHistory ? (
-          <div className="empty-state">
-            <GitCommitHorizontal size={32} />
-            <span>暂无提交记录</span>
-          </div>
-        ) : (
-          commits.map((c) => <CommitRow key={c.hash} commit={c} />)
-        )}
-        {loadingHistory && (
-          <div className="empty-state">
-            <Loader2 size={20} className="spin" />
-          </div>
-        )}
-        {commitsHasMore && !loadingHistory && (
-          <div className="load-more-wrap">
-            <button className="btn" onClick={() => void loadHistory(true)}>
-              加载更多
-            </button>
-          </div>
-        )}
-      </div>
-      {selectedCommitHash ? (
-        <CommitDetailPanel />
+  const list = (
+    <div className="commit-list">
+      {commits.length === 0 && !loadingHistory ? (
+        <div className="empty-state">
+          <GitCommitHorizontal size={32} />
+          <span>暂无提交记录</span>
+        </div>
       ) : (
-        <div className="commit-detail">
-          <div className="empty-state">
-            <GitCommitHorizontal size={32} />
-            <span>选择左侧提交查看详情</span>
-          </div>
+        commits.map((c) => <CommitRow key={c.hash} commit={c} />)
+      )}
+      {loadingHistory && (
+        <div className="empty-state">
+          <Loader2 size={20} className="spin" />
+        </div>
+      )}
+      {commitsHasMore && !loadingHistory && (
+        <div className="load-more-wrap">
+          <button className="btn" onClick={() => void loadHistory(true)}>
+            加载更多
+          </button>
         </div>
       )}
     </div>
   )
+
+  const detail = selectedCommitHash ? (
+    <CommitDetailPanel />
+  ) : (
+    <div className="commit-detail">
+      <div className="empty-state">
+        <GitCommitHorizontal size={32} />
+        <span>选择左侧提交查看详情</span>
+      </div>
+    </div>
+  )
+
+  return <Workspace list={list} detail={detail} listLabel="提交列表" detailLabel="提交详情" />
 }
 
 export default CommitHistory
