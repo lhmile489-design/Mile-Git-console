@@ -48,7 +48,8 @@ const ALLOWED_INVOKE_CHANNELS: ReadonlySet<string> = new Set([
   'settings:set',
   'window:minimize',
   'window:maximize',
-  'window:close'
+  'window:close',
+  'shell:openExternal'
 ])
 
 // 暴露给渲染进程的 API（通过 contextBridge，渲染进程通过 window.electronAPI 访问）

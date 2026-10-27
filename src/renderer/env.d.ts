@@ -1,18 +1,6 @@
 import type { IpcResponse } from '../../preload/index'
 
-// Vite 静态资源：PNG / JPG / SVG 等图片模块，import 后得到资源 URL 字符串
-declare module '*.png' {
-  const src: string
-  export default src
-}
-declare module '*.jpg' {
-  const src: string
-  export default src
-}
-declare module '*.svg' {
-  const src: string
-  export default src
-}
+// 图片模块声明见 assets.d.ts（本文件含 import，属于模块文件，不能放通配模块声明）
 
 declare global {
   interface Window {

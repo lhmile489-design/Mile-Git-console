@@ -1,6 +1,6 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
-  "include": ["src/renderer/src/**/*", "src/renderer/env.d.ts", "src/shared/**/*"],
+  "include": ["src/renderer/src/**/*", "src/renderer/env.d.ts", "src/renderer/assets.d.ts", "src/shared/**/*"],
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",

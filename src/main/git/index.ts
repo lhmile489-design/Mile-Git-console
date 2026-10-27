@@ -439,6 +439,8 @@ export async function pushRemote(
 // ---------------------------------------------------------------- 提交历史
 const LOG_FIELD_SEP = '\x1f'
 const LOG_RECORD_SEP = '\x1e'
+// header 结束标记：%b 可能含多行，不能按换行切 header，必须按此标记切
+const LOG_HEADER_END = '\x1d'
 const LOG_FORMAT = [
   '%H',
   '%h',
@@ -478,6 +480,36 @@ function parseTags(decoration: string): string[] | undefined {
   return tags.length > 0 ? tags : undefined
 }
 
+// 解析 `git log --format=<RS><LOG_FORMAT><HEADER_END> --numstat` 的原始输出（纯函数，便于单测）
+export function parseCommitLog(raw: string): CommitEntry[] {
+  const commits: CommitEntry[] = []
+  for (const chunk of raw.split(LOG_RECORD_SEP)) {
+    if (!chunk.trim()) continue
+    const end = chunk.indexOf(LOG_HEADER_END)
+    const header = end === -1 ? chunk : chunk.slice(0, end)
+    const numstat = end === -1 ? '' : chunk.slice(end + 1)
+    const [hash, shortHash, message, body, author, email, date, deco] =
+      header.split(LOG_FIELD_SEP)
+    if (!hash?.trim()) continue
+    const stats = parseNumstat(numstat)
+    const tags = parseTags(deco ?? '')
+    commits.push({
+      hash: hash.trim(),
+      shortHash: (shortHash ?? '').trim(),
+      message: (message ?? '').trim(),
+      ...(body?.trim() ? { description: body.trim() } : {}),
+      author: (author ?? '').trim(),
+      email: (email ?? '').trim(),
+      date: (date ?? '').trim(),
+      changedFiles: stats.changedFiles,
+      additions: stats.additions,
+      deletions: stats.deletions,
+      ...(tags ? { tags } : {})
+    })
+  }
+  return commits
+}
+
 export async function getCommitLog(
   repoPath: string,
   options: {
@@ -494,7 +526,7 @@ export async function getCommitLog(
       'log',
       // 注意：分隔符放格式前缀。git 的 --numstat 输出在 format 块之后，
       // 若把 \x1e 放在 format 末尾，numstat 会被切到下一条记录里
-      `--format=${LOG_RECORD_SEP}${LOG_FORMAT}`,
+      `--format=${LOG_RECORD_SEP}${LOG_FORMAT}${LOG_HEADER_END}`,
       '--numstat',
       `--max-count=${limit}`,
       `--skip=${offset}`
@@ -503,31 +535,7 @@ export async function getCommitLog(
     if (options.filePath) args.push('--', options.filePath)
 
     const raw = await git(repoPath).raw(args)
-    const commits: CommitEntry[] = []
-    for (const chunk of raw.split(LOG_RECORD_SEP)) {
-      const trimmed = chunk.trim()
-      if (!trimmed) continue
-      const nl = trimmed.indexOf('\n')
-      const header = nl === -1 ? trimmed : trimmed.slice(0, nl)
-      const numstat = nl === -1 ? '' : trimmed.slice(nl + 1)
-      const [hash, shortHash, message, body, author, email, date, deco] =
-        header.split(LOG_FIELD_SEP)
-      if (!hash) continue
-      const stats = parseNumstat(numstat)
-      commits.push({
-        hash: hash.trim(),
-        shortHash: (shortHash ?? '').trim(),
-        message: (message ?? '').trim(),
-        ...(body?.trim() ? { description: body.trim() } : {}),
-        author: (author ?? '').trim(),
-        email: (email ?? '').trim(),
-        date: (date ?? '').trim(),
-        changedFiles: stats.changedFiles,
-        additions: stats.additions,
-        deletions: stats.deletions,
-        ...(parseTags(deco ?? '') ? { tags: parseTags(deco ?? '') } : {})
-      })
-    }
+    const commits = parseCommitLog(raw)
 
     // 总数（用于分页）；空仓库或分支无 commit 时 rev-list 会报错，单独处理
     let total = 0
