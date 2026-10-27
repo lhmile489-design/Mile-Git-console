@@ -1,31 +1,25 @@
 import React, { useState } from 'react'
-import {
-  ActionButton,
-  AlertDialog,
-  DialogTrigger
-} from '@adobe/react-spectrum'
-import {
-  Check,
-  ChevronDown,
-  Minus,
-  Plus,
-  Undo2
-} from 'lucide-react'
+import { ChevronDown, Minus, Plus, Sparkles, Undo2 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
+import { ConfirmDialog, IconButton } from '../common'
 import type { GitFileStatus, GitFileStatusType } from '../../types/ipc'
 
-const STATUS_META: Record<GitFileStatusType, { letter: string; cls: string }> = {
-  added: { letter: 'A', cls: 'status-added' },
-  modified: { letter: 'M', cls: 'status-modified' },
-  deleted: { letter: 'D', cls: 'status-deleted' },
-  renamed: { letter: 'R', cls: 'status-renamed' },
-  untracked: { letter: '?', cls: 'status-untracked' },
-  conflict: { letter: '!', cls: 'status-conflict' }
+const STATUS_META: Record<GitFileStatusType, { letter: string; cls: string; label: string }> = {
+  added: { letter: 'A', cls: 'status-added', label: '新增' },
+  modified: { letter: 'M', cls: 'status-modified', label: '修改' },
+  deleted: { letter: 'D', cls: 'status-deleted', label: '删除' },
+  renamed: { letter: 'R', cls: 'status-renamed', label: '重命名' },
+  untracked: { letter: 'U', cls: 'status-untracked', label: '未跟踪' },
+  conflict: { letter: '!', cls: 'status-conflict', label: '冲突' }
 }
 
 export function StatusBadge({ status }: { status: GitFileStatusType }): React.ReactElement {
   const meta = STATUS_META[status]
-  return <span className={`status-badge ${meta.cls}`}>{meta.letter}</span>
+  return (
+    <span className={`status-badge ${meta.cls}`} title={meta.label} aria-label={meta.label}>
+      {meta.letter}
+    </span>
+  )
 }
 
 function splitPath(p: string): { name: string; dir: string } {
@@ -46,85 +40,63 @@ function FileRow({ file, checked, onCheck }: FileRowProps): React.ReactElement {
   const stage = useAppStore((s) => s.stage)
   const unstage = useAppStore((s) => s.unstage)
   const discard = useAppStore((s) => s.discard)
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
-  const selected =
-    selectedFile?.path === file.path && selectedFile?.staged === file.staged
+  const selected = selectedFile?.path === file.path && selectedFile?.staged === file.staged
   const { name, dir } = splitPath(file.path)
+  const dirText = file.oldPath ? `${splitPath(file.oldPath).name} → ${dir || file.path}` : dir
 
   return (
-    <div
-      className={`file-row${selected ? ' selected' : ''}`}
-      onClick={() => void selectFile({ path: file.path, staged: file.staged })}
-    >
-      {/* 复选框 */}
-      <span
-        className="file-row-checkbox"
-        onClick={(e) => {
-          e.stopPropagation()
-          onCheck(file.path, !checked)
-        }}
+    <div className={`file-row${selected ? ' selected' : ''}`}>
+      <input
+        type="checkbox"
+        className="ui-checkbox"
+        checked={checked}
+        onChange={(e) => onCheck(file.path, e.target.checked)}
+        aria-label={`选择 ${file.path}`}
+      />
+      {/* 选中区域、复选框、操作按钮互为兄弟节点，避免交互元素嵌套 */}
+      <button
+        className="file-row-main"
+        aria-current={selected ? 'true' : undefined}
+        title={file.oldPath ? `${file.oldPath} → ${file.path}` : file.path}
+        onClick={() => void selectFile({ path: file.path, staged: file.staged })}
       >
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={(e) => onCheck(file.path, e.target.checked)}
-          onClick={(e) => e.stopPropagation()}
-          aria-label={`选择 ${file.path}`}
-        />
-      </span>
-      <StatusBadge status={file.status} />
-      <div className="file-row-info">
+        <StatusBadge status={file.status} />
         <span className="file-name">{name}</span>
-        <span className="file-dir" title={file.oldPath ? `${file.oldPath} → ${file.path}` : file.path}>
-          {file.oldPath ? `${splitPath(file.oldPath).name} → ${dir || file.path}` : dir}
-        </span>
-      </div>
-      {file.status === 'conflict' && <span className="file-conflict-tag">冲突</span>}
+        {dirText && <span className="file-dir">{dirText}</span>}
+        {file.status === 'conflict' && <span className="file-conflict-tag">冲突</span>}
+      </button>
       <span className="file-row-actions">
         {file.staged ? (
-          <button
-            className="icon-btn"
-            aria-label="取消暂存"
-            title="取消暂存"
-            onClick={(e) => {
-              e.stopPropagation()
-              void unstage([file.path])
-            }}
-          >
+          <IconButton label="取消暂存" size="sm" onPress={() => void unstage([file.path])}>
             <Minus size={14} />
-          </button>
+          </IconButton>
         ) : (
           <>
-            <button
-              className="icon-btn"
-              aria-label="暂存"
-              title="暂存"
-              onClick={(e) => {
-                e.stopPropagation()
-                void stage([file.path])
-              }}
+            <IconButton
+              label="丢弃更改"
+              size="sm"
+              className="row-action-discard"
+              onPress={() => setConfirmDiscard(true)}
             >
+              <Undo2 size={14} />
+            </IconButton>
+            <IconButton label="暂存" size="sm" onPress={() => void stage([file.path])}>
               <Plus size={14} />
-            </button>
-            <span onClick={(e) => e.stopPropagation()}>
-              <DialogTrigger>
-                <ActionButton isQuiet aria-label="丢弃更改" UNSAFE_className="row-action-discard">
-                  <Undo2 size={14} />
-                </ActionButton>
-                <AlertDialog
-                  title="丢弃更改"
-                  variant="destructive"
-                  primaryActionLabel="丢弃"
-                  cancelLabel="取消"
-                  onPrimaryAction={() => void discard([file.path])}
-                >
-                  将丢弃「{file.path}」的所有未暂存更改，此操作不可恢复。确定要继续吗？
-                </AlertDialog>
-              </DialogTrigger>
-            </span>
+            </IconButton>
           </>
         )}
       </span>
+      <ConfirmDialog
+        isOpen={confirmDiscard}
+        onOpenChange={setConfirmDiscard}
+        title="丢弃更改"
+        confirmLabel="丢弃"
+        onConfirm={() => void discard([file.path])}
+      >
+        将丢弃「{file.path}」的所有未暂存更改，此操作不可恢复。确定要继续吗？
+      </ConfirmDialog>
     </div>
   )
 }
@@ -163,30 +135,30 @@ function FileGroup({ title, files, staged }: FileGroupProps): React.ReactElement
   }
 
   return (
-    <div className="file-group">
-      <div className="file-group-header" onClick={() => setCollapsed((v) => !v)}>
-        <ChevronDown
-          size={14}
-          className={`file-group-chevron${collapsed ? ' collapsed' : ''}`}
-        />
-        <span className="file-group-title">{title}</span>
-        <span className="file-count-badge">{files.length}</span>
-        <div className="file-group-actions" onClick={(e) => e.stopPropagation()}>
+    <section className="file-group">
+      <div className="file-group-header">
+        <button
+          className="file-group-toggle"
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed((v) => !v)}
+        >
+          <ChevronDown size={14} className={`file-group-chevron${collapsed ? ' collapsed' : ''}`} />
+          <span className="file-group-title">{title}</span>
+          <span className="count-badge">{files.length}</span>
+        </button>
+        <div className="file-group-actions">
           {hasChecked && (
-            <button
-              className="file-group-action file-group-action-primary"
-              onClick={handleBatchAction}
-            >
-              {staged ? <Minus size={12} /> : <Plus size={12} />}
-              {staged ? `取消暂存所选(${checkedList.length})` : `暂存所选(${checkedList.length})`}
+            <button className="file-group-action file-group-action-primary" onClick={handleBatchAction}>
+              {staged ? <Minus size={14} /> : <Plus size={14} />}
+              {staged ? `取消所选 ${checkedList.length}` : `暂存所选 ${checkedList.length}`}
             </button>
           )}
           <button
             className="file-group-action"
             onClick={() => void (staged ? unstage(['.']) : stage(['.']))}
           >
-            {staged ? <Minus size={12} /> : <Plus size={12} />}
-            {staged ? '全部取消暂存' : '全部暂存'}
+            {staged ? <Minus size={14} /> : <Plus size={14} />}
+            {staged ? '全部取消' : '全部暂存'}
           </button>
         </div>
       </div>
@@ -202,7 +174,7 @@ function FileGroup({ title, files, staged }: FileGroupProps): React.ReactElement
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -217,8 +189,11 @@ function StatusPanel(): React.ReactElement {
     return (
       <div className="status-panel">
         <div className="empty-state">
-          <Check size={32} />
-          <span>工作区干净，没有变更</span>
+          <span className="empty-state-icon" aria-hidden="true">
+            <Sparkles size={20} />
+          </span>
+          <span className="empty-state-title">工作区很干净</span>
+          <span>没有需要提交的更改</span>
         </div>
       </div>
     )

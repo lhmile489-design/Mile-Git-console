@@ -153,6 +153,7 @@
 /* ---------- 分段切换 ---------- */
 .ui-segmented {
   position: relative;
+  flex-shrink: 0;
   display: inline-grid;
   grid-template-columns: repeat(var(--seg-count), minmax(0, 1fr));
   padding: var(--space-1);
@@ -192,6 +193,9 @@
   cursor: pointer;
   outline: none;
   transition: color var(--transition-fast);
+}
+.ui-segmented-item svg {
+  flex-shrink: 0;
 }
 .ui-segmented-item[data-hovered] {
   color: var(--color-text-primary);
@@ -392,4 +396,65 @@ textarea.ui-input {
   font-weight: var(--font-weight-heavy);
   line-height: 1;
   box-shadow: var(--shadow-highlight);
+}
+
+/* ---------- 复选框：凹陷方块，选中后主色填充 + 白色勾 ---------- */
+.ui-checkbox {
+  appearance: none;
+  flex-shrink: 0;
+  display: inline-grid;
+  place-content: center;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 5px;
+  background: var(--color-bg-inset);
+  box-shadow: var(--shadow-press);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.ui-checkbox::after {
+  content: '';
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid var(--color-text-on-primary);
+  border-bottom: 2px solid var(--color-text-on-primary);
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform var(--transition-fast);
+}
+.ui-checkbox:hover {
+  border-color: var(--color-text-secondary);
+}
+.ui-checkbox:checked {
+  border-color: var(--color-primary);
+  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
+  box-shadow: var(--shadow-highlight);
+}
+.ui-checkbox:checked::after {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+.ui-checkbox:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ---------- 空状态：浮起图标块 + 标题 + 说明 ---------- */
+.empty-state-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
+  border: 1px solid var(--color-border-highlight);
+  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  color: var(--color-primary);
+}
+.empty-state-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-heavy);
+  color: var(--color-text-primary);
 }

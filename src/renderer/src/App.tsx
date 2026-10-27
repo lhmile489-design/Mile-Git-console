@@ -11,7 +11,7 @@ import CommitHistory from './components/git/CommitHistory'
 import DiffViewer from './components/git/DiffViewer'
 import SettingsPage from './pages/SettingsPage'
 import Workspace from './components/layout/Workspace'
-import { Panel } from './components/common'
+import { IconButton, Panel, Segmented } from './components/common'
 
 function FeedbackBars(): React.ReactElement | null {
   const error = useAppStore((s) => s.error)
@@ -79,30 +79,18 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
       <BranchSelector />
       <ActionBar />
       <div className="toolbar-spacer" />
-      <div className="segmented">
-        <button
-          className={`segmented-item${mainView === 'changes' ? ' active' : ''}`}
-          onClick={() => setMainView('changes')}
-        >
-          <List size={13} />
-          更改
-        </button>
-        <button
-          className={`segmented-item${mainView === 'history' ? ' active' : ''}`}
-          onClick={() => setMainView('history')}
-        >
-          <History size={13} />
-          历史
-        </button>
-      </div>
-      <button
-        className="icon-btn"
-        aria-label="刷新状态"
-        title="刷新状态"
-        onClick={() => void refreshStatus()}
-      >
-        <RefreshCw size={15} className={loadingStatus ? 'spin' : undefined} />
-      </button>
+      <Segmented
+        aria-label="视图切换"
+        value={mainView}
+        onChange={setMainView}
+        options={[
+          { id: 'changes', label: '更改', icon: <List size={16} /> },
+          { id: 'history', label: '历史', icon: <History size={16} /> }
+        ]}
+      />
+      <IconButton label="刷新状态" onPress={() => void refreshStatus()}>
+        <RefreshCw size={16} className={loadingStatus ? 'spin' : undefined} />
+      </IconButton>
     </Panel>
   )
 }
