@@ -1,5 +1,14 @@
 import React, { useEffect } from 'react'
-import { FolderOpen, GitFork, History, List, RefreshCw, X } from 'lucide-react'
+import {
+  CircleAlert,
+  CircleCheck,
+  FolderOpen,
+  GitFork,
+  History,
+  List,
+  RefreshCw,
+  X
+} from 'lucide-react'
 import { useAppStore, useActiveRepo, isStatusLoading } from './store/appStore'
 import Titlebar from './components/layout/Titlebar'
 import Sidebar from './components/layout/Sidebar'
@@ -11,7 +20,7 @@ import CommitHistory from './components/git/CommitHistory'
 import DiffViewer from './components/git/DiffViewer'
 import SettingsPage from './pages/SettingsPage'
 import Workspace from './components/layout/Workspace'
-import { IconButton, Panel, Segmented } from './components/common'
+import { Button, IconButton, Panel, Segmented } from './components/common'
 
 function FeedbackBars(): React.ReactElement | null {
   const error = useAppStore((s) => s.error)
@@ -27,29 +36,36 @@ function FeedbackBars(): React.ReactElement | null {
 
   if (!error && !notice) return null
 
+  // 浮在右下角的提示卡片：错误需手动关闭，普通提示 3 秒后自动消失
   return (
-    <>
+    <div className="toast-stack">
       {error && (
-        <div className="feedback-bar feedback-bar-error">
-          <span className="feedback-bar-text" title={error}>
+        <div className="toast toast-error" role="alert">
+          <span className="toast-icon" aria-hidden="true">
+            <CircleAlert size={16} />
+          </span>
+          <span className="toast-text selectable" title={error}>
             {error}
           </span>
-          <button className="icon-btn" aria-label="关闭" onClick={clearFeedback}>
+          <IconButton label="关闭提示" size="sm" onPress={clearFeedback}>
             <X size={14} />
-          </button>
+          </IconButton>
         </div>
       )}
       {notice && (
-        <div className="feedback-bar feedback-bar-notice">
-          <span className="feedback-bar-text" title={notice}>
+        <div className="toast toast-notice" role="status">
+          <span className="toast-icon" aria-hidden="true">
+            <CircleCheck size={16} />
+          </span>
+          <span className="toast-text" title={notice}>
             {notice}
           </span>
-          <button className="icon-btn" aria-label="关闭" onClick={clearFeedback}>
+          <IconButton label="关闭提示" size="sm" onPress={clearFeedback}>
             <X size={14} />
-          </button>
+          </IconButton>
         </div>
       )}
-    </>
+    </div>
   )
 }
 
@@ -57,12 +73,19 @@ function Welcome(): React.ReactElement {
   const importRepo = useAppStore((s) => s.importRepo)
   return (
     <div className="welcome">
-      <GitFork size={56} strokeWidth={1.2} />
-      <span className="welcome-text">导入一个 Git 仓库开始使用</span>
-      <button className="btn btn-primary" onClick={() => void importRepo()}>
-        <FolderOpen size={14} />
-        导入仓库
-      </button>
+      <Panel as="section" className="welcome-card" aria-labelledby="welcome-title">
+        <span className="welcome-mark" aria-hidden="true">
+          <GitFork size={32} />
+        </span>
+        <h1 id="welcome-title" className="welcome-title">
+          开始管理你的仓库
+        </h1>
+        <p className="welcome-text">导入一个本地 Git 仓库，查看变更、提交、切换分支和同步远端。</p>
+        <Button variant="primary" onPress={() => void importRepo()}>
+          <FolderOpen size={16} />
+          导入仓库
+        </Button>
+      </Panel>
     </div>
   )
 }
@@ -106,7 +129,6 @@ function MainLayout(): React.ReactElement {
         {activeRepo ? (
           <>
             <Toolbar repoName={activeRepo.name} />
-            <FeedbackBars />
             {mainView === 'changes' ? (
               <Workspace
                 listLabel="文件变更"
@@ -143,6 +165,7 @@ function App(): React.ReactElement {
     <>
       <Titlebar />
       {view === 'settings' ? <SettingsPage /> : <MainLayout />}
+      <FeedbackBars />
     </>
   )
 }

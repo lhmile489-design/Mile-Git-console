@@ -1,6 +1,8 @@
+// 设置页：居中单列卡片组（外观、关于），主题用三张带配色缩略预览的可选卡片
 import React, { useEffect, useState } from 'react'
 import { ArrowLeft, ExternalLink, Monitor, Moon, Sun } from 'lucide-react'
 import { useAppStore } from '../store/appStore'
+import { Button, IconButton, Panel } from '../components/common'
 
 type ThemeValue = 'light' | 'dark' | 'system'
 
@@ -16,6 +18,31 @@ function applyTheme(theme: ThemeValue): void {
   } else {
     document.documentElement.setAttribute('data-theme', theme)
   }
+}
+
+// 缩略预览：用 data-theme 局部套用对应主题的令牌，跟随系统时左右各半
+function ThemePreview({ value }: { value: ThemeValue }): React.ReactElement {
+  if (value === 'system') {
+    return (
+      <span className="theme-preview theme-preview-split" aria-hidden="true">
+        <span className="theme-preview-half" data-theme="light">
+          <span className="theme-preview-card" />
+        </span>
+        <span className="theme-preview-half" data-theme="dark">
+          <span className="theme-preview-card" />
+        </span>
+      </span>
+    )
+  }
+  return (
+    <span className="theme-preview" data-theme={value} aria-hidden="true">
+      <span className="theme-preview-side" />
+      <span className="theme-preview-main">
+        <span className="theme-preview-card" />
+        <span className="theme-preview-bar" />
+      </span>
+    </span>
+  )
 }
 
 function SettingsPage(): React.ReactElement {
@@ -49,57 +76,67 @@ function SettingsPage(): React.ReactElement {
 
   return (
     <div className="settings-page">
-      <div className="settings-header">
-        <button
-          className="icon-btn settings-back-btn"
-          aria-label="返回"
-          onClick={() => setView('main')}
-        >
-          <ArrowLeft size={16} />
-        </button>
-        <span className="settings-title">设置</span>
-      </div>
+      <div className="settings-column">
+        <div className="settings-header">
+          <IconButton label="返回" onPress={() => setView('main')}>
+            <ArrowLeft size={16} />
+          </IconButton>
+          <h1 className="settings-title">设置</h1>
+        </div>
 
-      <div className="settings-content">
-        {/* 区块一：外观 */}
-        <section className="settings-section">
-          <h2 className="settings-section-title">外观</h2>
-          <div className="settings-item">
-            <div className="settings-item-label">主题</div>
-            <div className="theme-selector">
-              {THEME_OPTIONS.map((opt) => (
+        <Panel as="section" className="settings-card" aria-labelledby="settings-appearance">
+          <h2 id="settings-appearance" className="settings-card-title">
+            外观
+          </h2>
+          <div className="settings-field-label" id="theme-label">
+            主题
+          </div>
+          <div className="theme-selector" role="radiogroup" aria-labelledby="theme-label">
+            {THEME_OPTIONS.map((opt) => {
+              const active = theme === opt.value
+              return (
                 <button
                   key={opt.value}
-                  className={`theme-option${theme === opt.value ? ' active' : ''}`}
+                  role="radio"
+                  aria-checked={active}
+                  className={`theme-option${active ? ' active' : ''}`}
                   onClick={() => handleThemeChange(opt.value)}
                 >
-                  {opt.icon}
-                  <span>{opt.label}</span>
+                  <ThemePreview value={opt.value} />
+                  <span className="theme-option-label">
+                    {opt.icon}
+                    {opt.label}
+                  </span>
                 </button>
-              ))}
-            </div>
+              )
+            })}
           </div>
-        </section>
+        </Panel>
 
-        {/* 区块二：关于 */}
-        <section className="settings-section">
-          <h2 className="settings-section-title">关于</h2>
-          <div className="settings-item">
-            <div className="settings-item-label">应用名称</div>
-            <div className="settings-item-value">Mile Git Management</div>
-          </div>
-          <div className="settings-item">
-            <div className="settings-item-label">版本</div>
-            <div className="settings-item-value">0.2.0</div>
-          </div>
-          <div className="settings-item">
-            <div className="settings-item-label">源代码</div>
-            <button className="settings-link" onClick={handleOpenGitHub}>
-              <ExternalLink size={13} />
-              <span>GitHub 仓库</span>
-            </button>
-          </div>
-        </section>
+        <Panel as="section" className="settings-card" aria-labelledby="settings-about">
+          <h2 id="settings-about" className="settings-card-title">
+            关于
+          </h2>
+          <dl className="settings-list">
+            <div className="settings-row">
+              <dt>应用名称</dt>
+              <dd>Mile Git Management</dd>
+            </div>
+            <div className="settings-row">
+              <dt>版本</dt>
+              <dd>0.2.0</dd>
+            </div>
+            <div className="settings-row">
+              <dt>源代码</dt>
+              <dd>
+                <Button size="sm" variant="ghost" onPress={handleOpenGitHub}>
+                  <ExternalLink size={14} />
+                  GitHub 仓库
+                </Button>
+              </dd>
+            </div>
+          </dl>
+        </Panel>
       </div>
     </div>
   )

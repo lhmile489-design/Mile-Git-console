@@ -5,7 +5,9 @@
    深色模式通过 [data-theme="dark"] 或 prefers-color-scheme 覆盖同名变量
    ============================================================ */
 
-:root {
+/* 浅色：:root 默认值，同时允许局部 data-theme="light" 套用（设置页主题缩略预览） */
+:root,
+[data-theme='light'] {
   /* ---------- 背景层级：base 窗口底色 / surface 卡片 / inset 凹陷区 ---------- */
   --color-bg-base: #E9EFF6;
   --color-bg-surface: #FBFDFF;
