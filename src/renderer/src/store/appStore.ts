@@ -101,8 +101,12 @@ interface AppState {
   // 当前活动仓库的远端操作进度；没有远端操作或尚未收到进度时为 null
   remoteProgress: RemoteProgress | null
 
+  // 命令面板（Ctrl+K）是否打开
+  paletteOpen: boolean
+
   // actions
   setView: (view: AppView) => void
+  setPaletteOpen: (open: boolean) => void
   init: () => Promise<void>
   importRepo: () => Promise<void>
   importRepoPath: (path: string) => Promise<void>
@@ -197,6 +201,9 @@ export const useAppStore = create<AppState>()((set, get) => {
     toasts: [],
     fileListWidth: FILE_LIST_WIDTH_DEFAULT,
     remoteProgress: null,
+    paletteOpen: false,
+
+    setPaletteOpen: (open) => set({ paletteOpen: open }),
 
     init: async () => {
       if (!progressUnsubscribe) {

@@ -31,6 +31,35 @@ function remoteIdle(): boolean {
 
 export const COMMANDS: Command[] = [
   {
+    id: 'palette.open',
+    label: '打开命令面板',
+    shortcut: { key: 'k', mod: true },
+    allowInInput: true,
+    enabled: () => true,
+    run: () => {
+      const s = useAppStore.getState()
+      s.setPaletteOpen(!s.paletteOpen)
+    }
+  },
+  {
+    id: 'repo.import',
+    label: '导入仓库',
+    enabled: () => true,
+    run: () => void useAppStore.getState().importRepo()
+  },
+  {
+    id: 'app.settings',
+    label: '打开设置',
+    enabled: () => true,
+    run: () => useAppStore.getState().setView('settings')
+  },
+  {
+    id: 'remote.fetch',
+    label: '获取',
+    enabled: () => remoteIdle(),
+    run: () => void useAppStore.getState().fetch()
+  },
+  {
     id: 'status.refresh',
     label: '刷新状态',
     shortcut: { key: 'F5' },

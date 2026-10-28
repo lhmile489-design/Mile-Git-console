@@ -18,6 +18,7 @@ import DiffViewer from './components/git/DiffViewer'
 import SettingsPage from './pages/SettingsPage'
 import Workspace from './components/layout/Workspace'
 import ToastStack from './components/layout/ToastStack'
+import CommandPalette from './components/layout/CommandPalette'
 import { useFocusRefresh } from './hooks/useFocusRefresh'
 import { useShortcuts } from './hooks/useShortcuts'
 import { useFolderDrop } from './hooks/useFolderDrop'
@@ -125,6 +126,7 @@ function App(): React.ReactElement {
       <Titlebar />
       {view === 'settings' ? <SettingsPage /> : <MainLayout />}
       <ToastStack />
+      <CommandPalette />
       {dragging && (
         <div className="drop-overlay" aria-hidden="true">
           <div className="drop-overlay-card">
