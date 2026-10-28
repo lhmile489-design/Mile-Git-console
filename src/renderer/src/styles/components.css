@@ -1704,3 +1704,85 @@
   font-size: var(--text-xs);
   color: var(--color-text-muted);
 }
+
+/* ---------- V3 选中态与列表 ---------- */
+/* 指示层所在的容器需要定位；行盖在指示层之上 */
+.repo-list,
+.status-panel,
+.commit-list,
+.palette-list {
+  position: relative;
+}
+.repo-item,
+.file-row,
+.commit-row,
+.palette-item {
+  position: relative;
+  z-index: 1;
+}
+/* 选中行自身不再画背景，交给滑动指示层；选中行悬停时也保持透明，避免盖住指示层 */
+.repo-item.active,
+.repo-item.active:hover,
+.file-row.selected,
+.file-row.selected:hover,
+.commit-row.selected,
+.commit-row.selected:hover,
+.palette-item.is-active {
+  background: transparent;
+  box-shadow: none;
+}
+.repo-item.active::before {
+  display: none;
+}
+
+/* 列表依次出现：只作用于前 8 项，之后的行不做动画，避免长列表拖慢 */
+@keyframes ui-list-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.repo-item:nth-of-type(-n + 8),
+.file-row:nth-of-type(-n + 8),
+.commit-row:nth-of-type(-n + 8) {
+  animation: ui-list-in var(--duration-base) var(--ease-emphasized) both;
+}
+.repo-item:nth-of-type(2),
+.file-row:nth-of-type(2),
+.commit-row:nth-of-type(2) {
+  animation-delay: calc(var(--stagger-step) * 1);
+}
+.repo-item:nth-of-type(3),
+.file-row:nth-of-type(3),
+.commit-row:nth-of-type(3) {
+  animation-delay: calc(var(--stagger-step) * 2);
+}
+.repo-item:nth-of-type(4),
+.file-row:nth-of-type(4),
+.commit-row:nth-of-type(4) {
+  animation-delay: calc(var(--stagger-step) * 3);
+}
+.repo-item:nth-of-type(5),
+.file-row:nth-of-type(5),
+.commit-row:nth-of-type(5) {
+  animation-delay: calc(var(--stagger-step) * 4);
+}
+.repo-item:nth-of-type(6),
+.file-row:nth-of-type(6),
+.commit-row:nth-of-type(6) {
+  animation-delay: calc(var(--stagger-step) * 5);
+}
+.repo-item:nth-of-type(7),
+.file-row:nth-of-type(7),
+.commit-row:nth-of-type(7) {
+  animation-delay: calc(var(--stagger-step) * 6);
+}
+.repo-item:nth-of-type(8),
+.file-row:nth-of-type(8),
+.commit-row:nth-of-type(8) {
+  animation-delay: calc(var(--stagger-step) * 7);
+}

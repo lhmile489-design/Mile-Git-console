@@ -1,11 +1,11 @@
 // 提交历史：左侧提交列表卡片 + 右侧详情卡片（摘要区、文件列表、只读 diff）
-import React from 'react'
+import React, { useRef } from 'react'
 import { AlertTriangle, GitCommitHorizontal, Loader2 } from 'lucide-react'
 import { useAppStore, isHistoryLoading } from '../../store/appStore'
 import { StatusBadge } from './StatusPanel'
 import DiffViewer from './DiffViewer'
 import Workspace from '../layout/Workspace'
-import { Button } from '../common'
+import { Button, SelectionIndicator } from '../common'
 import type { CommitEntry } from '../../types/ipc'
 
 function formatRelativeTime(dateStr: string): string {
@@ -169,10 +169,12 @@ function CommitHistory(): React.ReactElement {
   const commitsHasMore = useAppStore((s) => s.commitsHasMore)
   const loadingHistory = isHistoryLoading(useAppStore((s) => s.loading))
   const selectedCommitHash = useAppStore((s) => s.selectedCommitHash)
+  const listRef = useRef<HTMLDivElement>(null)
   const loadHistory = useAppStore((s) => s.loadHistory)
 
   const list = (
-    <div className="commit-list">
+    <div className="commit-list" ref={listRef}>
+      <SelectionIndicator containerRef={listRef} selector=".commit-row.selected" watch={selectedCommitHash} />
       {commits.length === 0 && !loadingHistory ? (
         <div className="empty-state">
           <span className="empty-state-icon" aria-hidden="true">

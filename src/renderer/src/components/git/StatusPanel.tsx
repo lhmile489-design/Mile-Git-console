@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { ChevronDown, Minus, Plus, Sparkles, Undo2 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
-import { ConfirmDialog, IconButton } from '../common'
+import { ConfirmDialog, IconButton, SelectionIndicator } from '../common'
 import type { GitFileStatus, GitFileStatusType } from '../../types/ipc'
 
 const STATUS_META: Record<GitFileStatusType, { letter: string; cls: string; label: string }> = {
@@ -180,6 +180,8 @@ function FileGroup({ title, files, staged }: FileGroupProps): React.ReactElement
 
 function StatusPanel(): React.ReactElement {
   const gitStatus = useAppStore((s) => s.gitStatus)
+  const selectedFile = useAppStore((s) => s.selectedFile)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const files = gitStatus?.files ?? []
   const stagedFiles = files.filter((f) => f.staged)
@@ -200,7 +202,12 @@ function StatusPanel(): React.ReactElement {
   }
 
   return (
-    <div className="status-panel">
+    <div className="status-panel" ref={panelRef}>
+      <SelectionIndicator
+        containerRef={panelRef}
+        selector=".file-row.selected"
+        watch={selectedFile ? `${selectedFile.path}:${selectedFile.staged}` : null}
+      />
       <FileGroup title="暂存的更改" files={stagedFiles} staged />
       <FileGroup title="更改" files={unstagedFiles} staged={false} />
     </div>

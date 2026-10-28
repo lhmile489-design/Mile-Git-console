@@ -606,3 +606,19 @@ textarea.ui-input {
 .ui-switch:checked::after {
   transform: translateX(16px);
 }
+
+/* ---------- 滑动选中指示层（SelectionIndicator） ---------- */
+/* 选中背景与左侧主色竖条由这一层承担，切换选中项时只动 transform 滑过去；宽高直接变化不做动画 */
+.ui-selection-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-selected);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+  pointer-events: none;
+}
+.ui-selection-indicator.is-animated {
+  transition: transform var(--duration-base) var(--ease-emphasized);
+}

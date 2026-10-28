@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Folder, FolderOpen, FolderSearch, GitBranch, Plus, Search, TriangleAlert, X } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
-import { Button, ConfirmDialog, IconButton, Panel } from '../common'
+import { Button, ConfirmDialog, IconButton, Panel, SelectionIndicator } from '../common'
 import type { RepoItem } from '../../types/ipc'
 
 interface RepoItemRowProps {
@@ -84,6 +84,7 @@ function Sidebar(): React.ReactElement {
   const activeRepoId = useAppStore((s) => s.activeRepoId)
   const importRepo = useAppStore((s) => s.importRepo)
   const [query, setQuery] = useState('')
+  const listRef = useRef<HTMLDivElement>(null)
 
   const filtered = query.trim()
     ? repos.filter((r) => r.name.toLowerCase().includes(query.trim().toLowerCase()))
@@ -130,7 +131,8 @@ function Sidebar(): React.ReactElement {
           ) : filtered.length === 0 ? (
             <div className="sidebar-empty">无匹配仓库</div>
           ) : (
-            <div className="repo-list">
+            <div className="repo-list" ref={listRef}>
+              <SelectionIndicator containerRef={listRef} selector=".repo-item.active" watch={activeRepoId} />
               {filtered.map((repo) => (
                 <RepoItemRow key={repo.id} repo={repo} isActive={repo.id === activeRepoId} />
               ))}

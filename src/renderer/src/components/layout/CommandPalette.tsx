@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Folder, GitBranch, Search, SquareTerminal } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { COMMANDS, formatShortcut } from '../../commands/registry'
+import { SelectionIndicator } from '../common'
 import { usePresence, type PresenceState } from '../../hooks/usePresence'
 
 interface PaletteItem {
@@ -154,6 +155,7 @@ function PaletteBody({
           <kbd className="palette-kbd">Esc</kbd>
         </div>
         <div className="palette-list" id="palette-list" role="listbox" ref={listRef}>
+          <SelectionIndicator containerRef={listRef} selector=".palette-item.is-active" watch={`${active}:${query}`} />
           {filtered.length === 0 && <div className="palette-empty">没有匹配的项目</div>}
           {filtered.map((item, i) => {
             const header = item.group !== lastGroup ? item.group : null
