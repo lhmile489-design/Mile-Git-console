@@ -8,6 +8,8 @@ export interface IconButtonProps
   isActive?: boolean
   size?: 'md' | 'sm'
   className?: string
+  // 附加在悬停提示后的快捷键文字，如 F5
+  hint?: string
   children: React.ReactNode
 }
 
@@ -16,6 +18,7 @@ function IconButton({
   isActive = false,
   size = 'md',
   className,
+  hint,
   children,
   ...rest
 }: IconButtonProps): React.ReactElement {
@@ -24,7 +27,7 @@ function IconButton({
     .join(' ')
   return (
     <AriaButton {...rest} aria-label={label} className={cls}>
-      <span className="ui-icon-btn-inner" title={label}>
+      <span className="ui-icon-btn-inner" title={hint ? `${label}（${hint}）` : label}>
         {children}
       </span>
     </AriaButton>

@@ -19,6 +19,8 @@ import SettingsPage from './pages/SettingsPage'
 import Workspace from './components/layout/Workspace'
 import ToastStack from './components/layout/ToastStack'
 import { useFocusRefresh } from './hooks/useFocusRefresh'
+import { useShortcuts } from './hooks/useShortcuts'
+import { shortcutHint } from './commands/registry'
 import { Button, IconButton, Panel, Segmented } from './components/common'
 
 function Welcome(): React.ReactElement {
@@ -63,7 +65,7 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
           { id: 'history', label: '历史', icon: <History size={16} /> }
         ]}
       />
-      <IconButton label="刷新状态" onPress={() => void refreshStatus()}>
+      <IconButton label="刷新状态" hint={shortcutHint('status.refresh')} onPress={() => void refreshStatus()}>
         <RefreshCw size={16} className={loadingStatus ? 'spin' : undefined} />
       </IconButton>
     </Panel>
@@ -114,6 +116,7 @@ function App(): React.ReactElement {
   }, [init])
 
   useFocusRefresh()
+  useShortcuts()
 
   return (
     <>

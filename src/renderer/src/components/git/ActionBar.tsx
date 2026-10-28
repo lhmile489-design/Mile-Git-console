@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, Download, Loader2, X } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { Button, ConfirmDialog } from '../common'
+import { shortcutHint } from '../../commands/registry'
 
 const REMOTE_OPS = ['fetch', 'pull', 'push'] as const
 type RemoteOp = (typeof REMOTE_OPS)[number]
@@ -105,13 +106,13 @@ function ActionBar(): React.ReactElement {
         {renderLabel('fetch', '获取')}
       </Button>
       <span className="action-group-divider" aria-hidden="true" />
-      <Button size="sm" variant="ghost" isDisabled={disabled} onPress={() => void pull()}>
+      <Button size="sm" variant="ghost" isDisabled={disabled} hint={`拉取（${shortcutHint('remote.pull')}）`} onPress={() => void pull()}>
         {renderIcon('pull', <ArrowDown size={16} />)}
         {renderLabel('pull', '拉取')}
         {behind > 0 && loadingAction !== 'pull' && <span className="action-badge">{behind}</span>}
       </Button>
       <span className="action-group-divider" aria-hidden="true" />
-      <Button size="sm" variant="ghost" isDisabled={disabled} onPress={() => void push(false)}>
+      <Button size="sm" variant="ghost" isDisabled={disabled} hint={`推送（${shortcutHint('remote.push')}）`} onPress={() => void push(false)}>
         {renderIcon('push', <ArrowUp size={16} />)}
         {renderLabel('push', '推送')}
         {ahead > 0 && loadingAction !== 'push' && <span className="action-badge">{ahead}</span>}
