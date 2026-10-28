@@ -42,3 +42,18 @@ interface RemoteProgress {
 
 - `on(channel, listener)` 改为返回取消订阅函数 `() => void`。
 - 删除 `off()`。原实现拿不到 `on` 内部包装后的监听器，无法真正移除。
+
+## A7 仓库失效处理
+
+### 变更：`repo:list`
+
+- 返回的 `RepoItem` 新增可选字段 `missing?: boolean`。每次列出时检查目录是否仍是 Git 仓库，不是则为 `true`。该字段实时计算，不写入数据库，不需要迁移。
+
+### 新增：`repo:relocate`
+
+- 入参：`{ id: number; path: string }`
+- 出参：`RepoItem`（更新后的记录，名称随新目录名更新，操作日志保留）
+- 错误：
+  - 2002：缺少 id 或 path；新路径已被列表中另一个仓库占用；id 不存在
+  - 1003：新路径不是有效的 Git 仓库
+  - 2001：数据库写入失败

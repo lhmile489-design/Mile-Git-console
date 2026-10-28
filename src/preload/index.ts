@@ -26,6 +26,7 @@ const ALLOWED_INVOKE_CHANNELS: ReadonlySet<string> = new Set([
   'repo:add',
   'repo:remove',
   'repo:touch',
+  'repo:relocate',
   'dialog:open-folder',
   'git:status',
   'git:stage',

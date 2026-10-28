@@ -17,6 +17,8 @@ export interface RepoItem {
   path: string
   addedAt: string
   lastOpenedAt: string
+  // 仓库目录被移动或删除（repo:list 时实时检查，不存库）
+  missing?: boolean
 }
 
 // ---- Git 工作区 ----

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Folder, FolderOpen, GitBranch, Plus, Search, X } from 'lucide-react'
+import { Folder, FolderOpen, FolderSearch, GitBranch, Plus, Search, TriangleAlert, X } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { Button, ConfirmDialog, IconButton, Panel } from '../common'
 import type { RepoItem } from '../../types/ipc'
@@ -13,20 +13,30 @@ function RepoItemRow({ repo, isActive }: RepoItemRowProps): React.ReactElement {
   const gitStatus = useAppStore((s) => s.gitStatus)
   const removeRepo = useAppStore((s) => s.removeRepo)
   const selectRepo = useAppStore((s) => s.selectRepo)
+  const relocateRepo = useAppStore((s) => s.relocateRepo)
   const [confirmRemove, setConfirmRemove] = useState(false)
+  const missing = repo.missing === true
 
   return (
-    <div className={`repo-item${isActive ? ' active' : ''}`}>
+    <div className={`repo-item${isActive ? ' active' : ''}${missing ? ' is-missing' : ''}`}>
       {/* 选中区域与移除按钮是兄弟节点，避免按钮嵌套按钮 */}
       <button
         className="repo-item-main"
         aria-current={isActive ? 'true' : undefined}
         onClick={() => void selectRepo(repo.id)}
       >
-        <Folder size={16} className="repo-item-icon" />
+        {missing ? (
+          <TriangleAlert size={16} className="repo-item-icon" aria-hidden="true" />
+        ) : (
+          <Folder size={16} className="repo-item-icon" />
+        )}
         <span className="repo-item-info">
           <span className="repo-item-name">{repo.name}</span>
-          {isActive && gitStatus ? (
+          {missing ? (
+            <span className="repo-item-sub repo-item-missing" title={repo.path}>
+              目录不存在
+            </span>
+          ) : isActive && gitStatus ? (
             <span className="repo-item-sub">
               <GitBranch size={12} />
               {gitStatus.branch}
@@ -38,6 +48,16 @@ function RepoItemRow({ repo, isActive }: RepoItemRowProps): React.ReactElement {
           )}
         </span>
       </button>
+      {missing && (
+        <IconButton
+          label={`重新定位 ${repo.name}`}
+          size="sm"
+          className="repo-item-relocate"
+          onPress={() => void relocateRepo(repo.id)}
+        >
+          <FolderSearch size={14} />
+        </IconButton>
+      )}
       <IconButton
         label={`移除 ${repo.name}`}
         size="sm"

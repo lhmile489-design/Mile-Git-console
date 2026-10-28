@@ -106,6 +106,7 @@ interface AppState {
   init: () => Promise<void>
   importRepo: () => Promise<void>
   removeRepo: (id: number) => Promise<void>
+  relocateRepo: (id: number) => Promise<void>
   selectRepo: (id: number) => Promise<void>
   refreshStatus: (opts?: { silent?: boolean }) => Promise<void>
   refreshBranches: () => Promise<void>
@@ -217,9 +218,8 @@ export const useAppStore = create<AppState>()((set, get) => {
       await run(async () => {
         const repos = await repoApi.listRepos()
         set({ repos })
-        if (repos.length > 0) {
-          await get().selectRepo(repos[0].id)
-        }
+        const first = repos.find((r) => !r.missing)
+        if (first) await get().selectRepo(first.id)
       })
     },
 
@@ -258,13 +258,28 @@ export const useAppStore = create<AppState>()((set, get) => {
               }
             : {})
         })
-        if (isActive && repos.length > 0) {
-          await get().selectRepo(repos[0].id)
-        }
+        const next = isActive ? repos.find((r) => !r.missing) : undefined
+        if (next) await get().selectRepo(next.id)
+      })
+    },
+
+    relocateRepo: async (id) => {
+      const picked = await repoApi.openFolderDialog()
+      if (!picked) return // 用户取消
+      await run(async () => {
+        const repo = await repoApi.relocateRepo(id, picked.path)
+        set({ repos: await repoApi.listRepos() })
+        pushToast('success', `已重新定位到：${repo.path}`)
+        await get().selectRepo(repo.id)
       })
     },
 
     selectRepo: async (id) => {
+      const target = get().repos.find((r) => r.id === id)
+      if (target?.missing) {
+        pushToast('error', `仓库目录不存在：${target.path}。可以重新定位或从列表移除`)
+        return
+      }
       set({
         activeRepoId: id,
         gitStatus: null,

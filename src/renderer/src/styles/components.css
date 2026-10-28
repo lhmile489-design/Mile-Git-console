@@ -244,6 +244,22 @@
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
+/* 失效仓库：目录被移走或删除 */
+.repo-item.is-missing .repo-item-icon {
+  color: var(--color-git-conflict);
+}
+.repo-item.is-missing .repo-item-name {
+  color: var(--color-text-secondary);
+}
+.repo-item-missing {
+  color: var(--color-git-conflict);
+}
+.repo-item-relocate {
+  flex-shrink: 0;
+}
+.repo-item.is-missing .repo-item-remove {
+  opacity: 1;
+}
 .repo-item:hover .repo-item-remove,
 .repo-item-remove[data-focus-visible] {
   opacity: 1;

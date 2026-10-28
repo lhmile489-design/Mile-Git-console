@@ -117,6 +117,14 @@ export function removeRepo(id: number): void {
   getDb().prepare('DELETE FROM repositories WHERE id = ?').run(id)
 }
 
+// 重新定位：仓库目录被移走后指向新路径，名称随新目录名更新；操作日志保留
+export function relocateRepo(id: number, repoPath: string): RepoItem | null {
+  const name = path.basename(repoPath)
+  getDb().prepare('UPDATE repositories SET path = ?, name = ? WHERE id = ?').run(repoPath, name, id)
+  const row = getDb().prepare('SELECT * FROM repositories WHERE id = ?').get(id) as RepoRow | undefined
+  return row ? rowToRepo(row) : null
+}
+
 export function touchRepo(id: number): void {
   getDb()
     .prepare('UPDATE repositories SET last_opened_at = ? WHERE id = ?')

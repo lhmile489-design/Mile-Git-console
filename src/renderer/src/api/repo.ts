@@ -13,5 +13,9 @@ export const removeRepo = (id: number): Promise<null> =>
 export const touchRepo = (id: number): Promise<null> =>
   invoke('repo:touch', { id })
 
+// 仓库目录被移走后指向新路径
+export const relocateRepo = (id: number, path: string): Promise<RepoItem> =>
+  invoke('repo:relocate', { id, path })
+
 export const openFolderDialog = (): Promise<{ path: string } | null> =>
   invoke('dialog:open-folder')
