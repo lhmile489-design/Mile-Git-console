@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { I18nProvider } from 'react-aria-components'
 import App from './App'
-import { getSettings } from './api/settings'
+import { getSetting, getSettings } from './api/settings'
 // Nunito 本地打包（离线可用），只引入 latin 子集的 4 个字重（中文走系统回退）
 import '@fontsource/nunito/latin-400.css'
 import '@fontsource/nunito/latin-600.css'
@@ -29,8 +29,19 @@ async function applySavedTheme(): Promise<void> {
   document.documentElement.removeAttribute('data-theme')
 }
 
+// 「减少视觉效果」：关闭玻璃模糊与全部动画（设置页开关，键 ui.reduceEffects）
+async function applyReduceEffects(): Promise<void> {
+  try {
+    if ((await getSetting('ui.reduceEffects')) === true) {
+      document.documentElement.setAttribute('data-reduce-effects', '')
+    }
+  } catch {
+    // 读取失败保持默认（开启视觉效果）
+  }
+}
+
 async function bootstrap(): Promise<void> {
-  await applySavedTheme()
+  await Promise.all([applySavedTheme(), applyReduceEffects()])
 
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>

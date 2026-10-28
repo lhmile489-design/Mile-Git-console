@@ -121,6 +121,30 @@
   --transition-normal: 240ms var(--ease-soft);
   --transition-slow: 300ms var(--ease-soft);
 
+  /* 缓动：进入用轻微回弹（超出约 2%），离开用快速收尾，位移类用标准减速 */
+  --ease-out-back: cubic-bezier(0.34, 1.2, 0.64, 1);
+  --ease-in-quick: cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --duration-instant: 100ms; /* 按下反馈 */
+  --duration-fast: 150ms; /* 悬停、离开 */
+  --duration-base: 220ms; /* 浮层进入、选中位移 */
+  --duration-slow: 300ms; /* 视图切换 */
+  --stagger-step: 24ms; /* 列表依次出现的间隔，只作用于前 8 项 */
+
+  /* 模糊半径：遮罩 sm，菜单 / 面板 / 提示 md，标题栏 lg */
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 28px;
+
+  /* 玻璃层：底色半透明 + 模糊 + 轻度饱和。不透明度按「背后纯白 / 纯黑」最坏情况验证，
+     正文对比度不低于 4.5:1（浅色至少 88%，深色至少 93%），深色块里单独覆盖 */
+  --glass-alpha: 90%;
+  --glass-alpha-strong: 94%;
+  --glass-bg: color-mix(in srgb, var(--color-bg-surface) var(--glass-alpha), transparent);
+  --glass-bg-strong: color-mix(in srgb, var(--color-bg-surface) var(--glass-alpha-strong), transparent);
+  --glass-border: color-mix(in srgb, var(--color-border-highlight) 70%, transparent);
+  --glass-filter: blur(var(--blur-md)) saturate(160%);
+
   /* ---------- 布局尺寸 ---------- */
   --sidebar-width: 240px;
   --titlebar-height: 38px;
@@ -182,6 +206,9 @@
     --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     --shadow-primary: 0 2px 4px rgba(0, 0, 0, 0.35), 0 10px 20px -10px rgba(90, 169, 230, 0.45);
     --color-backdrop: rgba(0, 0, 0, 0.55);
+    /* 深色下背后内容对比更强，玻璃需要更不透明（实测最坏情况需 >= 93%） */
+    --glass-alpha: 94%;
+    --glass-alpha-strong: 97%;
   }
 }
 
@@ -234,4 +261,7 @@
   --shadow-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
   --shadow-primary: 0 2px 4px rgba(0, 0, 0, 0.35), 0 10px 20px -10px rgba(90, 169, 230, 0.45);
   --color-backdrop: rgba(0, 0, 0, 0.55);
+  /* 深色下背后内容对比更强，玻璃需要更不透明（实测最坏情况需 >= 93%） */
+  --glass-alpha: 94%;
+  --glass-alpha-strong: 97%;
 }

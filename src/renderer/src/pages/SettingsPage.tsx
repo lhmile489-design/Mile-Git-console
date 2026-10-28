@@ -48,6 +48,9 @@ function ThemePreview({ value }: { value: ThemeValue }): React.ReactElement {
 function SettingsPage(): React.ReactElement {
   const setView = useAppStore((s) => s.setView)
   const [theme, setTheme] = useState<ThemeValue>('system')
+  const [reduceEffects, setReduceEffects] = useState(
+    () => document.documentElement.hasAttribute('data-reduce-effects')
+  )
 
   // 启动时从持久化读取主题
   useEffect(() => {
@@ -66,6 +69,13 @@ function SettingsPage(): React.ReactElement {
     setTheme(value)
     applyTheme(value)
     void window.electronAPI.invoke('settings:set', { key: 'theme', value })
+  }
+
+  const handleReduceEffects = (value: boolean): void => {
+    setReduceEffects(value)
+    if (value) document.documentElement.setAttribute('data-reduce-effects', '')
+    else document.documentElement.removeAttribute('data-reduce-effects')
+    void window.electronAPI.invoke('settings:set', { key: 'ui.reduceEffects', value })
   }
 
   const handleOpenGitHub = (): void => {
@@ -111,6 +121,19 @@ function SettingsPage(): React.ReactElement {
               )
             })}
           </div>
+          <label className="settings-switch">
+            <span className="settings-switch-text">
+              <span className="settings-switch-title">减少视觉效果</span>
+              <span className="settings-switch-desc">关闭毛玻璃模糊与界面动画，适合低配设备或对动效敏感时使用</span>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              className="ui-switch"
+              checked={reduceEffects}
+              onChange={(e) => handleReduceEffects(e.target.checked)}
+            />
+          </label>
         </Panel>
 
         <Panel as="section" className="settings-card" aria-labelledby="settings-about">

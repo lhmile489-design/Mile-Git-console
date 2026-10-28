@@ -468,3 +468,56 @@ textarea.ui-input {
   color: var(--color-danger);
   background: var(--color-danger-bg);
 }
+
+/* ---------- 玻璃层（只用于浮层与标题栏，滚动容器禁止使用） ----------
+   不透明度与模糊由 tokens.css 的 --glass-* 控制；减少透明度 / 减少视觉效果时
+   令牌被改成实底，这里无需单独处理 */
+.ui-glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: var(--glass-filter);
+  backdrop-filter: var(--glass-filter);
+}
+.ui-glass-strong {
+  background: var(--glass-bg-strong);
+}
+/* 不支持背景模糊时直接用实底，避免半透明底上文字对比度不足 */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ui-glass,
+  .ui-glass-strong {
+    background: var(--color-bg-surface);
+  }
+}
+
+/* ---------- 开关（原生 checkbox + role="switch"，滑块只用 transform） ---------- */
+.ui-switch {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 24px;
+  margin: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-inset);
+  box-shadow: var(--shadow-press);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-emphasized);
+}
+.ui-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
+  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  transition: transform var(--duration-base) var(--ease-out-back);
+}
+.ui-switch:checked {
+  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
+}
+.ui-switch:checked::after {
+  transform: translateX(16px);
+}

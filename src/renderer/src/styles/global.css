@@ -159,6 +159,29 @@ pre {
   }
 }
 
+/* 系统开启「减少透明度」：玻璃层令牌改为实底、关闭模糊。
+   :root:root 提高优先级，压过 tokens.css 里 [data-theme] 的同名变量 */
+@media (prefers-reduced-transparency: reduce) {
+  :root:root {
+    --glass-alpha: 100%;
+    --glass-alpha-strong: 100%;
+    --glass-filter: none;
+  }
+}
+
+/* 设置页「减少视觉效果」：同时关闭玻璃与动画 */
+:root:root[data-reduce-effects] {
+  --glass-alpha: 100%;
+  --glass-alpha-strong: 100%;
+  --glass-filter: none;
+}
+[data-reduce-effects] *,
+[data-reduce-effects] *::before,
+[data-reduce-effects] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
 /* Lucide 图标统一 1.75 线宽，比默认 2 更贴近柔性 UI 的细线风格 */
 .lucide {
   stroke-width: 1.75;
