@@ -2,7 +2,7 @@
 
 > 本文件适用于在 `Git-Management-electron/` 目录下启动的 Electron 开发 session。
 > 主调度 session 在根目录 `Mile-Git-Management/`，不直接读写本目录源码。
-> 最后更新：2026-10-08（v1：项目初始化，骨架搭建完成）
+> 最后更新：2026-10-28（v2：UI 重构为进化柔性 UI，移除 React Spectrum）
 
 ---
 
@@ -12,7 +12,7 @@
 |---|---|
 | 应用名 | Mile Git Management |
 | 应用 ID | `com.mile.git-management` |
-| 版本 | `0.1.0` |
+| 版本 | `0.2.0` |
 | 入口（主进程） | `src/main/index.ts` |
 | 入口（渲染进程） | `src/renderer/src/main.tsx` |
 | Preload | `src/preload/index.ts` |
@@ -28,13 +28,13 @@
 |---|---|---|
 | 运行时 | Electron 33.x | 主进程 + 渲染进程容器 |
 | 渲染框架 | React 18 + TypeScript | 渲染进程 UI |
-| UI 组件库 | React Spectrum（`@adobe/react-spectrum`） | Adobe 桌面级组件，内置键盘导航和无障碍 |
+| UI 组件库 | `react-aria-components` + 自绘样式（`components/common/`） | 交互与无障碍来自 React Aria，视觉为进化柔性 UI |
 | 底层交互 | React Aria（`@react-aria/*`） | 可单独引入，接管交互逻辑 |
 | 样式方案 | CSS 变量（`tokens.css`）+ 全局样式 | 无 CSS-in-JS；设计令牌单一来源 |
 | Git 操作 | `simple-git` | Node.js Git 封装，在主进程调用 |
 | 本地存储 | `better-sqlite3` | SQLite，同步 API，仅在主进程使用 |
 | 配置持久化 | `electron-store` | 应用设置（主题偏好、窗口大小等） |
-| 状态管理 | Zustand（待引入） | 轻量状态管理，渲染进程内使用 |
+| 状态管理 | Zustand | 轻量状态管理，渲染进程内使用 |
 | IPC 通信 | Electron ipcMain / ipcRenderer + contextBridge | 主进程与渲染进程通信唯一通道 |
 
 ---
@@ -63,7 +63,7 @@ Git-Management-electron/
 │   └── renderer/                # 渲染进程（浏览器环境）
 │       ├── index.html           # HTML 入口
 │       └── src/
-│           ├── main.tsx         # React 入口，React Spectrum Provider
+│           ├── main.tsx         # React 入口，I18nProvider
 │           ├── App.tsx          # 根组件，整体布局
 │           ├── components/      # 通用组件
 │           │   ├── layout/      # 布局组件（Sidebar、Titlebar 等）
@@ -219,12 +219,14 @@ export async function getGitStatus(repoPath: string) {
 - **禁止使用设计令牌外的字号**，只允许 `--text-xs` 到 `--text-2xl`
 - **禁止使用间距令牌外的数值**（如 `margin: 13px`），只允许 `--space-1` 到 `--space-16`
 
-### 7.2 React Spectrum 使用约定
+### 7.2 基础组件约定（进化柔性 UI，2026-10-28 起）
 
-- 所有交互组件优先使用 React Spectrum（`Button`、`TextField`、`ComboBox`、`Tree` 等）
-- `<Provider>` 已在 `main.tsx` 根层注入，子组件不需重复包裹
-- 主题跟随系统深浅色模式，支持手动切换（通过 `settings:set` IPC 持久化）
-- 复杂布局可不使用 Spectrum 布局组件，直接用 CSS Grid/Flexbox + 设计令牌
+- React Spectrum 已移除。交互组件统一用 `components/common/`（`Button`、`IconButton`、`ConfirmDialog`、`Segmented`、`Panel`、`ResizeHandle`），业务组件不直接引用 `react-aria-components`
+- 基础组件样式在 `styles/ui.css`（类名 `ui-` 前缀，交互状态用 react-aria 的 `data-hovered` / `data-pressed` / `data-focus-visible`）
+- `main.tsx` 根层只有 `I18nProvider locale="zh-CN"`；主题由 `<html data-theme>` 控制，`settings:set` 持久化
+- 破坏性操作一律用 `ConfirmDialog`，且对话框与触发它的菜单是兄弟节点（菜单关闭时不能把对话框一起卸载）
+- 交互元素不嵌套：列表行里的选中按钮、复选框、操作按钮互为兄弟节点
+- 设计规格与对比度结果见 `docs/UI重构文档.md`
 
 ### 7.3 图标规范
 
@@ -332,4 +334,4 @@ npm run dist:win
 
 > 本文件由 Electron 开发 session 维护，内容变更时就地修正并标注日期。
 > 主调度 session 在根目录 `CLAUDE.md` 中维护项目整体视图。
-> 最后更新：2026-10-08（v1：项目初始化）
+> 最后更新：2026-10-28（v2：UI 重构）
