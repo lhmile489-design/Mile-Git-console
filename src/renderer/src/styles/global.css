@@ -149,14 +149,6 @@ pre {
   transition: transform var(--transition-normal), opacity var(--transition-normal);
 }
 
-/* 临时：React Spectrum Provider 会在根包裹 div 上写死中文字体（回退到 SimSun），
-   用 id 选择器覆盖；它也没有高度，导致下层 height: 100% 全部失效，这里一并补上。
-   阶段 5 移除 Spectrum 后删除本规则，并给 #root 直接子节点保留 height: 100% */
-#root > div {
-  height: 100%;
-  font-family: var(--font-family-ui);
-}
-
 /* 系统开启「减少动画」时关闭所有过渡与动画 */
 @media (prefers-reduced-motion: reduce) {
   *,
