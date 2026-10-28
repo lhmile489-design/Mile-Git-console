@@ -228,12 +228,14 @@
   justify-content: center;
   padding: var(--space-6);
   background: var(--color-backdrop);
+  -webkit-backdrop-filter: var(--backdrop-filter);
+  backdrop-filter: var(--backdrop-filter);
 }
 .ui-modal-overlay[data-entering] {
-  animation: ui-fade-in var(--transition-normal);
+  animation: ui-fade-in var(--duration-base) var(--ease-emphasized);
 }
 .ui-modal-overlay[data-exiting] {
-  animation: ui-fade-in var(--transition-fast) reverse;
+  animation: ui-fade-out var(--duration-fast) var(--ease-in-quick) forwards;
 }
 .ui-modal {
   width: 100%;
@@ -241,10 +243,10 @@
   outline: none;
 }
 .ui-modal[data-entering] {
-  animation: ui-pop-in var(--transition-normal);
+  animation: ui-pop-in var(--duration-base) var(--ease-out-back);
 }
 .ui-modal[data-exiting] {
-  animation: ui-pop-in var(--transition-fast) reverse;
+  animation: ui-pop-in var(--duration-fast) var(--ease-in-quick) reverse forwards;
 }
 .ui-dialog {
   padding: var(--space-6);
@@ -297,6 +299,14 @@
   }
   to {
     opacity: 1;
+  }
+}
+@keyframes ui-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 @keyframes ui-pop-in {

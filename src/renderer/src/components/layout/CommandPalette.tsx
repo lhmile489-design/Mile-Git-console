@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Folder, GitBranch, Search, SquareTerminal } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { COMMANDS, formatShortcut } from '../../commands/registry'
+import { usePresence, type PresenceState } from '../../hooks/usePresence'
 
 interface PaletteItem {
   id: string
@@ -72,7 +73,13 @@ function matches(item: PaletteItem, query: string): boolean {
     .every((w) => hay.includes(w))
 }
 
-function PaletteBody({ onClose }: { onClose: () => void }): React.ReactElement {
+function PaletteBody({
+  onClose,
+  state
+}: {
+  onClose: () => void
+  state: PresenceState
+}): React.ReactElement {
   const items = useItems()
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
@@ -125,6 +132,7 @@ function PaletteBody({ onClose }: { onClose: () => void }): React.ReactElement {
   return (
     <div
       className="palette-overlay"
+      data-state={state}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
@@ -184,8 +192,10 @@ function PaletteBody({ onClose }: { onClose: () => void }): React.ReactElement {
 function CommandPalette(): React.ReactElement | null {
   const open = useAppStore((s) => s.paletteOpen)
   const setOpen = useAppStore((s) => s.setPaletteOpen)
-  if (!open) return null
-  return <PaletteBody onClose={() => setOpen(false)} />
+  // 关闭后保持挂载 150ms 播放离开动画，再卸载（卸载时焦点还给打开前的元素）
+  const presence = usePresence(open, 150)
+  if (!presence.mounted) return null
+  return <PaletteBody onClose={() => setOpen(false)} state={presence.state} />
 }
 
 export default CommandPalette

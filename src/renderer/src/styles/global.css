@@ -166,6 +166,7 @@ pre {
     --glass-alpha: 100%;
     --glass-alpha-strong: 100%;
     --glass-filter: none;
+    --backdrop-filter: none;
   }
 }
 
@@ -174,6 +175,7 @@ pre {
   --glass-alpha: 100%;
   --glass-alpha-strong: 100%;
   --glass-filter: none;
+  --backdrop-filter: none;
 }
 [data-reduce-effects] *,
 [data-reduce-effects] *::before,

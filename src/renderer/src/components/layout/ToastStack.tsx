@@ -1,6 +1,6 @@
 // 右下角提示卡片队列：最多 3 条叠放，新的在下
 // 错误不自动消失；普通提示 3 秒、带操作按钮的 5 秒后消失；鼠标悬停或键盘焦点在卡片内时暂停计时
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CircleAlert, CircleCheck, Info, X } from 'lucide-react'
 import { useAppStore, type Toast } from '../../store/appStore'
 import { Button, IconButton } from '../common'
@@ -8,21 +8,45 @@ import { Button, IconButton } from '../common'
 const DURATION_MS = 3000
 const DURATION_WITH_ACTION_MS = 5000
 
+// 离开动画时长，与 components.css 中 .toast[data-state='exiting'] 一致
+const EXIT_MS = 150
+
+function motionDisabled(): boolean {
+  return (
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    document.documentElement.hasAttribute('data-reduce-effects')
+  )
+}
+
 function ToastItem({ toast }: { toast: Toast }): React.ReactElement {
-  const dismiss = useAppStore((s) => s.dismissToast)
+  const removeToast = useAppStore((s) => s.dismissToast)
   const [paused, setPaused] = useState(false)
+  const [leaving, setLeaving] = useState(false)
   // 剩余时长跨暂停保留，避免悬停后计时从头开始
   const remaining = useRef(toast.action ? DURATION_WITH_ACTION_MS : DURATION_MS)
 
+  // 先播放离开动画，结束后再从队列移除
+  const dismiss = useCallback(
+    (id: number) => {
+      if (motionDisabled()) {
+        removeToast(id)
+        return
+      }
+      setLeaving(true)
+      setTimeout(() => removeToast(id), EXIT_MS)
+    },
+    [removeToast]
+  )
+
   useEffect(() => {
-    if (toast.kind === 'error' || paused) return
+    if (toast.kind === 'error' || paused || leaving) return
     const startedAt = Date.now()
     const timer = setTimeout(() => dismiss(toast.id), remaining.current)
     return () => {
       clearTimeout(timer)
       remaining.current = Math.max(0, remaining.current - (Date.now() - startedAt))
     }
-  }, [toast.id, toast.kind, paused, dismiss])
+  }, [toast.id, toast.kind, paused, leaving, dismiss])
 
   const isError = toast.kind === 'error'
   const icon = isError ? (
@@ -36,6 +60,7 @@ function ToastItem({ toast }: { toast: Toast }): React.ReactElement {
   return (
     <div
       className={`toast toast-${toast.kind}`}
+      data-state={leaving ? 'exiting' : 'open'}
       role={isError ? 'alert' : 'status'}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}

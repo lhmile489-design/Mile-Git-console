@@ -144,6 +144,7 @@
   --glass-bg-strong: color-mix(in srgb, var(--color-bg-surface) var(--glass-alpha-strong), transparent);
   --glass-border: color-mix(in srgb, var(--color-border-highlight) 70%, transparent);
   --glass-filter: blur(var(--blur-md)) saturate(160%);
+  --backdrop-filter: blur(var(--blur-sm)); /* 遮罩层只做轻微虚化 */
 
   /* ---------- 布局尺寸 ---------- */
   --sidebar-width: 240px;

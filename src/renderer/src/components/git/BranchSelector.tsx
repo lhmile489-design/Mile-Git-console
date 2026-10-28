@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Check, ChevronDown, GitBranch, Loader2, Plus } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
+import { usePresence } from '../../hooks/usePresence'
 
 // 分支选择器：药丸形按钮 + 下拉菜单（菜单样式与 ActionBar 共用 popover-menu / menu-item）
 function BranchSelector(): React.ReactElement {
@@ -43,6 +44,7 @@ function BranchSelector(): React.ReactElement {
     if (creating) inputRef.current?.focus()
   }, [creating])
 
+  const presence = usePresence(open, 150)
   const localBranches = branches.filter((b) => !b.isRemote)
   const currentBranch = gitStatus?.branch ?? ''
 
@@ -75,8 +77,13 @@ function BranchSelector(): React.ReactElement {
         <span className="branch-chip-name">{currentBranch || '…'}</span>
         <ChevronDown size={16} className="branch-chip-caret" />
       </button>
-      {open && (
-        <div className="popover-menu branch-menu" role="menu" aria-label="切换分支">
+      {presence.mounted && (
+        <div
+          className="popover-menu branch-menu"
+          role="menu"
+          aria-label="切换分支"
+          data-state={presence.state}
+        >
           <div className="menu-label">本地分支</div>
           <div className="branch-menu-list">
             {localBranches.map((b) => (

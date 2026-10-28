@@ -22,6 +22,7 @@ import CommandPalette from './components/layout/CommandPalette'
 import { useFocusRefresh } from './hooks/useFocusRefresh'
 import { useShortcuts } from './hooks/useShortcuts'
 import { useFolderDrop } from './hooks/useFolderDrop'
+import { usePresence } from './hooks/usePresence'
 import { shortcutHint } from './commands/registry'
 import { Button, IconButton, Panel, Segmented } from './components/common'
 
@@ -120,6 +121,7 @@ function App(): React.ReactElement {
   useFocusRefresh()
   useShortcuts()
   const dragging = useFolderDrop()
+  const dropPresence = usePresence(dragging, 150)
 
   return (
     <>
@@ -127,8 +129,8 @@ function App(): React.ReactElement {
       {view === 'settings' ? <SettingsPage /> : <MainLayout />}
       <ToastStack />
       <CommandPalette />
-      {dragging && (
-        <div className="drop-overlay" aria-hidden="true">
+      {dropPresence.mounted && (
+        <div className="drop-overlay" aria-hidden="true" data-state={dropPresence.state}>
           <div className="drop-overlay-card">
             <FolderOpen size={32} />
             <span className="drop-overlay-title">松开即可导入仓库</span>

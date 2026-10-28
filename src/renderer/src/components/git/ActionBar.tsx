@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, Download, Loader2, X } 
 import { useAppStore } from '../../store/appStore'
 import { Button, ConfirmDialog } from '../common'
 import { shortcutHint } from '../../commands/registry'
+import { usePresence } from '../../hooks/usePresence'
 
 const REMOTE_OPS = ['fetch', 'pull', 'push'] as const
 type RemoteOp = (typeof REMOTE_OPS)[number]
@@ -44,6 +45,7 @@ function ActionBar(): React.ReactElement {
   const menuRef = useRef<HTMLDivElement>(null)
 
   const remoteRunning = isRemoteOp(loadingAction)
+  const menuPresence = usePresence(menuOpen, 150)
 
   // 远端操作进行超过 CANCEL_DELAY_MS 才露出取消按钮；操作结束立即收起
   useEffect(() => {
@@ -144,8 +146,8 @@ function ActionBar(): React.ReactElement {
           </Button>
         </>
       )}
-      {menuOpen && (
-        <div className="popover-menu action-group-menu" role="menu">
+      {menuPresence.mounted && (
+        <div className="popover-menu action-group-menu" role="menu" data-state={menuPresence.state}>
           <button
             className="menu-item menu-item-danger"
             role="menuitem"
