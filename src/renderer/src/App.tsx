@@ -20,6 +20,7 @@ import CommitHistory from './components/git/CommitHistory'
 import DiffViewer from './components/git/DiffViewer'
 import SettingsPage from './pages/SettingsPage'
 import Workspace from './components/layout/Workspace'
+import { useFocusRefresh } from './hooks/useFocusRefresh'
 import { Button, IconButton, Panel, Segmented } from './components/common'
 
 function FeedbackBars(): React.ReactElement | null {
@@ -160,6 +161,8 @@ function App(): React.ReactElement {
   useEffect(() => {
     void init()
   }, [init])
+
+  useFocusRefresh()
 
   return (
     <>

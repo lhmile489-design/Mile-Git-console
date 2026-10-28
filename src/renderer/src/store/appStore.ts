@@ -66,7 +66,7 @@ interface AppState {
   importRepo: () => Promise<void>
   removeRepo: (id: number) => Promise<void>
   selectRepo: (id: number) => Promise<void>
-  refreshStatus: () => Promise<void>
+  refreshStatus: (opts?: { silent?: boolean }) => Promise<void>
   refreshBranches: () => Promise<void>
   loadHistory: (append?: boolean) => Promise<void>
   setMainView: (view: MainView) => void
@@ -222,12 +222,22 @@ export const useAppStore = create<AppState>()((set, get) => {
       }
     },
 
-    refreshStatus: async () => {
+    refreshStatus: async (opts) => {
       const repoPath = activeRepoPath(get())
       if (!repoPath) return
       // 引用计数 +1，防止并发竞态
       set((s) => ({ loading: { ...s.loading, statusCount: s.loading.statusCount + 1 } }))
-      await run(async () => {
+      // silent：窗口聚焦等后台刷新，失败不弹错误卡片
+      const exec = opts?.silent
+        ? async (fn: () => Promise<void>): Promise<void> => {
+            try {
+              await fn()
+            } catch {
+              // 后台刷新失败忽略，等用户下一次手动操作再提示
+            }
+          }
+        : run
+      await exec(async () => {
         const gitStatus = await gitApi.getGitStatus(repoPath)
         set({ gitStatus })
         // 若当前选中文件仍有 diff 展示，刷新它
