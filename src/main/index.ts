@@ -4,15 +4,20 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { initDatabase } from './storage/db'
 import { registerAllIpc } from './ipc'
 import { createTray } from './tray'
+import { loadWindowState, trackWindowState } from './windowState'
 
 function createWindow(): void {
   // 加载应用图标（resources/ 目录，开发模式与生产模式路径一致）
   const iconPath = join(__dirname, '../../resources/icon.png')
   const icon = nativeImage.createFromPath(iconPath)
 
+  // 恢复上次的窗口尺寸与位置；位置已不在任何显示器上时只恢复尺寸
+  const saved = loadWindowState()
+
   const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: saved.bounds?.width ?? 1280,
+    height: saved.bounds?.height ?? 800,
+    ...(saved.bounds && saved.positionValid ? { x: saved.bounds.x, y: saved.bounds.y } : {}),
     minWidth: 1024,
     minHeight: 700,
     show: false,
@@ -31,7 +36,11 @@ function createWindow(): void {
     }
   })
 
+  const saveWindowState = trackWindowState(mainWindow)
+  app.on('before-quit', saveWindowState)
+
   mainWindow.on('ready-to-show', () => {
+    if (saved.maximized) mainWindow.maximize()
     mainWindow.show()
     // 窗口显示后恢复任务栏图标
     if (process.platform !== 'darwin') {
@@ -42,6 +51,7 @@ function createWindow(): void {
   // 拦截关闭事件：改为隐藏窗口，应用继续在托盘运行
   mainWindow.on('close', (event) => {
     event.preventDefault()
+    saveWindowState()
     mainWindow.hide()
     if (process.platform !== 'darwin') {
       mainWindow.setSkipTaskbar(true)
