@@ -814,11 +814,15 @@
   align-items: center;
   gap: 2px;
   opacity: 0;
-  transition: opacity var(--transition-fast);
+  transform: translateX(4px);
+  transition:
+    opacity var(--duration-fast) var(--ease-emphasized),
+    transform var(--duration-base) var(--ease-out-back);
 }
 .file-row:hover .file-row-actions,
 .file-row:focus-within .file-row-actions {
   opacity: 1;
+  transform: translateX(0);
 }
 .row-action-discard[data-hovered] {
   color: var(--color-danger);

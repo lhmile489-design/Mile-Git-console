@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   FolderOpen,
   GitFork,
@@ -52,6 +52,7 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
   const setMainView = useAppStore((s) => s.setMainView)
   const refreshStatus = useAppStore((s) => s.refreshStatus)
   const loadingStatus = isStatusLoading(useAppStore((s) => s.loading))
+  const [spinKey, setSpinKey] = useState(0)
 
   return (
     <Panel className="toolbar">
@@ -68,8 +69,20 @@ function Toolbar({ repoName }: { repoName: string }): React.ReactElement {
           { id: 'history', label: '历史', icon: <History size={16} /> }
         ]}
       />
-      <IconButton label="刷新状态" hint={shortcutHint('status.refresh')} onPress={() => void refreshStatus()}>
-        <RefreshCw size={16} className={loadingStatus ? 'spin' : undefined} />
+      <IconButton
+        label="刷新状态"
+        hint={shortcutHint('status.refresh')}
+        onPress={() => {
+          // 每次点击换 key，让图标重新挂载并整圈旋转一次
+          setSpinKey((k) => k + 1)
+          void refreshStatus()
+        }}
+      >
+        <RefreshCw
+          key={spinKey}
+          size={16}
+          className={loadingStatus ? 'spin' : spinKey > 0 ? 'spin-once' : undefined}
+        />
       </IconButton>
     </Panel>
   )

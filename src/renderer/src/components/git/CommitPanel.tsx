@@ -1,9 +1,11 @@
 // 提交区：位于文件列表卡片底部，只针对暂存区的文件
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import { useAppStore, useActiveRepo } from '../../store/appStore'
 import { useCommitDraft } from '../../hooks/useCommitDraft'
 import { Button } from '../common'
+
+const SUCCESS_HOLD_MS = 600
 
 function CommitPanel(): React.ReactElement {
   const gitStatus = useAppStore((s) => s.gitStatus)
@@ -14,6 +16,14 @@ function CommitPanel(): React.ReactElement {
   const { draft, update, clear } = useCommitDraft(repoPath)
   const { summary, description } = draft
   const [submitting, setSubmitting] = useState(false)
+  // 提交成功后按钮短暂停留在成功态
+  const [justCommitted, setJustCommitted] = useState(false)
+
+  useEffect(() => {
+    if (!justCommitted) return
+    const timer = setTimeout(() => setJustCommitted(false), SUCCESS_HOLD_MS)
+    return () => clearTimeout(timer)
+  }, [justCommitted])
 
   const stagedCount = (gitStatus?.files ?? []).filter((f) => f.staged).length
   const branch = gitStatus?.branch ?? ''
@@ -35,7 +45,10 @@ function CommitPanel(): React.ReactElement {
     setSubmitting(true)
     try {
       const ok = await commit(summary.trim(), description.trim() || undefined)
-      if (ok) clear(committedRepo)
+      if (ok) {
+        clear(committedRepo)
+        setJustCommitted(true)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -66,12 +79,17 @@ function CommitPanel(): React.ReactElement {
       />
       <Button
         variant="primary"
-        className="commit-submit"
-        isDisabled={!canCommit}
+        className={`commit-submit${justCommitted ? ' is-success' : ''}`}
+        // 成功态期间不显示禁用样式；此时 canCommit 为假，点击不会重复提交
+        isDisabled={!canCommit && !justCommitted}
         onPress={() => void handleCommit()}
       >
-        {submitting ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
-        {stagedCount > 0 ? `提交 ${stagedCount} 个文件` : '提交'}
+        {submitting ? (
+          <Loader2 size={16} className="spin" />
+        ) : (
+          <Check key={justCommitted ? 'done' : 'idle'} size={16} />
+        )}
+        {justCommitted ? '已提交' : stagedCount > 0 ? `提交 ${stagedCount} 个文件` : '提交'}
       </Button>
       <span className="commit-hint" title={hint}>
         {hint}

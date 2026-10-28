@@ -22,11 +22,15 @@
   white-space: nowrap;
   cursor: pointer;
   outline: none;
+  /* 主按钮的高光扫过需要裁切在按钮内 */
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   transition:
-    transform var(--transition-normal),
-    box-shadow var(--transition-normal),
-    background-color var(--transition-fast),
-    color var(--transition-fast);
+    transform var(--duration-base) var(--ease-out-back),
+    box-shadow var(--duration-base) var(--ease-emphasized),
+    background-color var(--duration-fast) var(--ease-emphasized),
+    color var(--duration-fast) var(--ease-emphasized);
 }
 .ui-btn-sm {
   height: 28px;
@@ -54,6 +58,32 @@
 }
 .ui-btn-primary[data-hovered]:not([data-disabled]) {
   transform: translateY(-1px);
+}
+/* 主按钮悬停：一道高光从左向右扫过一次（只动 transform） */
+.ui-btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, var(--color-border-highlight) 35%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+.ui-btn-primary[data-hovered]:not([data-disabled])::after {
+  animation: ui-sheen var(--duration-slow) var(--ease-emphasized);
+}
+@keyframes ui-sheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
 }
 
 /* 次要按钮 */
@@ -90,10 +120,29 @@
   transform: translateY(-1px);
 }
 
-/* 按下：回到原位，换成凹陷阴影 */
+/* 按下：回到原位并轻微缩小，换成凹陷阴影；按下反馈用最短时长 */
 .ui-btn[data-pressed]:not([data-disabled]) {
-  transform: translateY(0);
+  transform: translateY(0) scale(0.97);
   box-shadow: var(--shadow-press);
+  transition-duration: var(--duration-instant);
+}
+/* 成功态：短暂停留在主色渐变 + 对勾，由组件控制停留时长 */
+.ui-btn.is-success {
+  background: linear-gradient(180deg, var(--color-git-added), var(--color-git-added));
+  color: var(--color-text-on-primary);
+}
+.ui-btn.is-success svg {
+  animation: ui-pop-check var(--duration-base) var(--ease-out-back);
+}
+@keyframes ui-pop-check {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ---------- 图标按钮 ---------- */
@@ -112,9 +161,10 @@
   outline: none;
   flex-shrink: 0;
   transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast),
-    box-shadow var(--transition-normal);
+    transform var(--duration-base) var(--ease-out-back),
+    background-color var(--duration-fast) var(--ease-emphasized),
+    color var(--duration-fast) var(--ease-emphasized),
+    box-shadow var(--duration-base) var(--ease-emphasized);
 }
 .ui-icon-btn-sm {
   width: 24px;
@@ -128,6 +178,25 @@
   width: 100%;
   height: 100%;
 }
+.ui-icon-btn-inner svg {
+  transition: transform var(--duration-base) var(--ease-out-back);
+}
+/* 悬停时图标轻微上浮 */
+.ui-icon-btn[data-hovered]:not([data-disabled]) .ui-icon-btn-inner svg {
+  transform: translateY(-1px);
+}
+/* 刷新按钮点击后整圈旋转一次（组件切换 key 重新触发） */
+.spin-once {
+  animation: ui-spin-once var(--duration-slow) var(--ease-emphasized);
+}
+@keyframes ui-spin-once {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
 .ui-icon-btn[data-hovered]:not([data-disabled]) {
   background: var(--color-bg-surface);
   color: var(--color-text-primary);
@@ -139,6 +208,8 @@
 }
 .ui-icon-btn[data-pressed]:not([data-disabled]) {
   box-shadow: var(--shadow-press);
+  transform: scale(0.94);
+  transition-duration: var(--duration-instant);
 }
 .ui-icon-btn[data-focus-visible] {
   outline: 2px solid var(--color-primary);
@@ -171,7 +242,7 @@
   background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
   box-shadow: var(--shadow-raise), var(--shadow-highlight);
   transform: translateX(calc(var(--seg-index) * 100%));
-  transition: transform var(--transition-normal);
+  transition: transform var(--duration-base) var(--ease-out-back);
   pointer-events: none;
 }
 .ui-segmented-item {
@@ -192,7 +263,7 @@
   white-space: nowrap;
   cursor: pointer;
   outline: none;
-  transition: color var(--transition-fast);
+  transition: color var(--duration-base) var(--ease-emphasized);
 }
 .ui-segmented-item svg {
   flex-shrink: 0;
@@ -338,11 +409,15 @@
   border-radius: var(--radius-pill);
   background-color: var(--color-border-strong);
   opacity: 0;
-  transition: opacity var(--transition-fast);
+  transition:
+    opacity var(--duration-fast) var(--ease-emphasized),
+    transform var(--duration-base) var(--ease-out-back);
   pointer-events: none;
 }
+/* 悬停时握把变长，拖动 / 键盘聚焦时整条高亮 */
 .ui-resize-handle:hover .ui-resize-handle-grip {
   opacity: 0.6;
+  transform: scaleY(1.5);
 }
 .ui-resize-handle:active .ui-resize-handle-grip,
 .ui-resize-handle:focus-visible .ui-resize-handle-grip {
@@ -433,7 +508,7 @@ textarea.ui-input {
   border-left: 2px solid var(--color-text-on-primary);
   border-bottom: 2px solid var(--color-text-on-primary);
   transform: translateY(-1px) rotate(-45deg) scale(0);
-  transition: transform var(--transition-fast);
+  transition: transform var(--duration-base) var(--ease-out-back);
 }
 .ui-checkbox:hover {
   border-color: var(--color-text-secondary);
