@@ -99,6 +99,7 @@ function MainLayout(): React.ReactElement {
         {activeRepo ? (
           <>
             <Toolbar repoName={activeRepo.name} />
+            <div className="view-stage">
             {mainView === 'changes' ? (
               <Workspace
                 listLabel="文件变更"
@@ -114,6 +115,7 @@ function MainLayout(): React.ReactElement {
             ) : (
               <CommitHistory />
             )}
+            </div>
           </>
         ) : (
           <Welcome />

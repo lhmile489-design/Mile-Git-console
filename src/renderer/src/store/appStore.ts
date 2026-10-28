@@ -15,6 +15,7 @@ import * as gitApi from '../api/git'
 import * as settingsApi from '../api/settings'
 import { IpcError } from '../api/_invoke'
 import { IPC_CANCELLED } from '../types/ipc'
+import { withViewTransition } from '../utils/motion'
 
 // 远端长操作的进度（主进程经 git:progress 推送）
 export interface RemoteProgress {
@@ -113,7 +114,7 @@ interface AppState {
   removeRepo: (id: number) => Promise<void>
   relocateRepo: (id: number) => Promise<void>
   selectRepo: (id: number) => Promise<void>
-  refreshStatus: (opts?: { silent?: boolean }) => Promise<void>
+  refreshStatus: (opts?: { silent?: boolean; transition?: boolean }) => Promise<void>
   refreshBranches: () => Promise<void>
   loadHistory: (append?: boolean) => Promise<void>
   setMainView: (view: MainView) => void
@@ -335,7 +336,9 @@ export const useAppStore = create<AppState>()((set, get) => {
         : run
       await exec(async () => {
         const gitStatus = await gitApi.getGitStatus(repoPath)
-        set({ gitStatus })
+        // transition：暂存 / 取消暂存后让文件行平滑移到新分组
+        if (opts?.transition) await withViewTransition(() => set({ gitStatus }), { kind: 'files' })
+        else set({ gitStatus })
         // 若当前选中文件仍有 diff 展示，刷新它
         const sel = get().selectedFile
         if (sel && get().mainView === 'changes') {
@@ -381,7 +384,12 @@ export const useAppStore = create<AppState>()((set, get) => {
     },
 
     setMainView: (view) => {
-      set({ mainView: view, diff: null })
+      if (view === get().mainView) return
+      // 切到历史从右进，切回更改从左进
+      void withViewTransition(() => set({ mainView: view, diff: null }), {
+        kind: 'view',
+        dir: view === 'history' ? 'forward' : 'back'
+      })
       if (view === 'history' && get().commits.length === 0) {
         void get().loadHistory()
       }
@@ -444,7 +452,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       if (!repoPath) return
       await run(async () => {
         await gitApi.stageFiles(repoPath, paths)
-        await get().refreshStatus()
+        await get().refreshStatus({ transition: true })
       })
     },
 
@@ -453,7 +461,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       if (!repoPath) return
       await run(async () => {
         await gitApi.unstageFiles(repoPath, paths)
-        await get().refreshStatus()
+        await get().refreshStatus({ transition: true })
       })
     },
 

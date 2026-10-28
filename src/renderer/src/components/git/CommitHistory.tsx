@@ -5,7 +5,7 @@ import { useAppStore, isHistoryLoading } from '../../store/appStore'
 import { StatusBadge } from './StatusPanel'
 import DiffViewer from './DiffViewer'
 import Workspace from '../layout/Workspace'
-import { Button, SelectionIndicator } from '../common'
+import { Button, SelectionIndicator, Skeleton } from '../common'
 import type { CommitEntry } from '../../types/ipc'
 
 function formatRelativeTime(dateStr: string): string {
@@ -185,7 +185,9 @@ function CommitHistory(): React.ReactElement {
       ) : (
         commits.map((c) => <CommitRow key={c.hash} commit={c} />)
       )}
-      {loadingHistory && (
+      {/* 首次加载用骨架行；加载更多时只在底部转圈 */}
+      {loadingHistory && commits.length === 0 && <Skeleton rows={8} label="正在读取提交历史" />}
+      {loadingHistory && commits.length > 0 && (
         <div className="commit-list-loading">
           <Loader2 size={20} className="spin" />
         </div>

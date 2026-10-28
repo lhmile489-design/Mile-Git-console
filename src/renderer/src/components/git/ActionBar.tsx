@@ -172,6 +172,15 @@ function ActionBar(): React.ReactElement {
       >
         强制推送会用本地历史覆盖远端分支历史，远端上他人未合并的提交可能丢失。此操作不可撤销，确定要继续吗？
       </ConfirmDialog>
+      {/* 远端进度条：宽度由 scaleX 驱动，只动 transform */}
+      {remoteRunning && (
+        <span className="action-progress-track" aria-hidden="true">
+          <span
+            className={`action-progress-bar${remoteProgress ? '' : ' is-indeterminate'}`}
+            style={remoteProgress ? { transform: `scaleX(${Math.min(1, Math.max(0, remoteProgress.progress / 100))})` } : undefined}
+          />
+        </span>
+      )}
     </div>
   )
 }

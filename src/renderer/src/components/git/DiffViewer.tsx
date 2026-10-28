@@ -1,9 +1,9 @@
 // Diff 卡片：卡片头（路径 + 增删统计 + 暂存操作）+ 凹陷代码区
 // worktree 模式用于变更视图，显示暂存 / 取消暂存；commit 模式用于提交历史，只读
 import React from 'react'
-import { FileText, Loader2, Minus, Plus } from 'lucide-react'
+import { FileText, Minus, Plus } from 'lucide-react'
 import { useAppStore, isDiffLoading } from '../../store/appStore'
-import { Button } from '../common'
+import { Button, Skeleton } from '../common'
 
 interface DiffViewerProps {
   mode?: 'worktree' | 'commit'
@@ -31,7 +31,13 @@ function DiffViewer({ mode = 'worktree' }: DiffViewerProps): React.ReactElement 
   const unstage = useAppStore((s) => s.unstage)
 
   if (loading) {
-    return <EmptyDiff icon={<Loader2 size={20} className="spin" />} title="加载中…" />
+    return (
+      <div className="diff-viewer">
+        <div className="diff-well">
+          <Skeleton rows={12} variant="code" label="正在读取差异" />
+        </div>
+      </div>
+    )
   }
   if (!diff) {
     return (

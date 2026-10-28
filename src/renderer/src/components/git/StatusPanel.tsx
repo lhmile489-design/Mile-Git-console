@@ -1,7 +1,8 @@
 import React, { useRef, useState } from 'react'
 import { ChevronDown, Minus, Plus, Sparkles, Undo2 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
-import { ConfirmDialog, IconButton, SelectionIndicator } from '../common'
+import { ConfirmDialog, IconButton, SelectionIndicator, Skeleton } from '../common'
+import { vtNameForPath } from '../../utils/motion'
 import type { GitFileStatus, GitFileStatusType } from '../../types/ipc'
 
 const STATUS_META: Record<GitFileStatusType, { letter: string; cls: string; label: string }> = {
@@ -32,9 +33,11 @@ interface FileRowProps {
   file: GitFileStatus
   checked: boolean
   onCheck: (path: string, checked: boolean) => void
+  // 过渡用名：同一路径同时出现在两个分组时（部分暂存）要加分组后缀，避免重名导致过渡被跳过
+  vtName: string
 }
 
-function FileRow({ file, checked, onCheck }: FileRowProps): React.ReactElement {
+function FileRow({ file, checked, onCheck, vtName }: FileRowProps): React.ReactElement {
   const selectedFile = useAppStore((s) => s.selectedFile)
   const selectFile = useAppStore((s) => s.selectFile)
   const stage = useAppStore((s) => s.stage)
@@ -47,7 +50,11 @@ function FileRow({ file, checked, onCheck }: FileRowProps): React.ReactElement {
   const dirText = file.oldPath ? `${splitPath(file.oldPath).name} → ${dir || file.path}` : dir
 
   return (
-    <div className={`file-row${selected ? ' selected' : ''}`}>
+    // --vt-name 只在暂存 / 取消暂存的过渡期间被 CSS 用作 view-transition-name
+    <div
+      className={`file-row${selected ? ' selected' : ''}`}
+      style={{ '--vt-name': vtName } as React.CSSProperties}
+    >
       <input
         type="checkbox"
         className="ui-checkbox"
@@ -105,9 +112,11 @@ interface FileGroupProps {
   title: string
   files: GitFileStatus[]
   staged: boolean
+  // 两个分组里都有的路径
+  bothGroups: Set<string>
 }
 
-function FileGroup({ title, files, staged }: FileGroupProps): React.ReactElement | null {
+function FileGroup({ title, files, staged, bothGroups }: FileGroupProps): React.ReactElement | null {
   const stage = useAppStore((s) => s.stage)
   const unstage = useAppStore((s) => s.unstage)
   const [collapsed, setCollapsed] = useState(false)
@@ -170,6 +179,11 @@ function FileGroup({ title, files, staged }: FileGroupProps): React.ReactElement
               file={f}
               checked={checkedPaths.has(f.path)}
               onCheck={handleCheck}
+              vtName={
+                bothGroups.has(f.path)
+                  ? `${vtNameForPath(f.path)}-${staged ? 's' : 'u'}`
+                  : vtNameForPath(f.path)
+              }
             />
           ))}
         </div>
@@ -183,9 +197,20 @@ function StatusPanel(): React.ReactElement {
   const selectedFile = useAppStore((s) => s.selectedFile)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  const files = gitStatus?.files ?? []
+  // 首次加载（还没有状态数据）时显示骨架行
+  if (!gitStatus) {
+    return (
+      <div className="status-panel">
+        <Skeleton rows={8} label="正在读取工作区状态" />
+      </div>
+    )
+  }
+
+  const files = gitStatus.files
   const stagedFiles = files.filter((f) => f.staged)
   const unstagedFiles = files.filter((f) => !f.staged)
+  const stagedPaths = new Set(stagedFiles.map((f) => f.path))
+  const bothGroups = new Set(unstagedFiles.filter((f) => stagedPaths.has(f.path)).map((f) => f.path))
 
   if (files.length === 0) {
     return (
@@ -208,8 +233,8 @@ function StatusPanel(): React.ReactElement {
         selector=".file-row.selected"
         watch={selectedFile ? `${selectedFile.path}:${selectedFile.staged}` : null}
       />
-      <FileGroup title="暂存的更改" files={stagedFiles} staged />
-      <FileGroup title="更改" files={unstagedFiles} staged={false} />
+      <FileGroup title="暂存的更改" files={stagedFiles} staged bothGroups={bothGroups} />
+      <FileGroup title="更改" files={unstagedFiles} staged={false} bothGroups={bothGroups} />
     </div>
   )
 }

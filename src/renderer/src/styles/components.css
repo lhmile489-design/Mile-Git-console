@@ -1786,3 +1786,142 @@
 .commit-row:nth-of-type(8) {
   animation-delay: calc(var(--stagger-step) * 7);
 }
+
+/* ---------- V5 加载与进度 ---------- */
+/* 骨架屏：光带用 transform 扫过，不动 background-position */
+.ui-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+.ui-skeleton-code {
+  gap: var(--space-2);
+}
+.ui-skeleton-row {
+  position: relative;
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-inset);
+  overflow: hidden;
+  animation: ui-fade-in var(--duration-base) var(--ease-emphasized);
+}
+.ui-skeleton-code .ui-skeleton-row {
+  height: 10px;
+}
+.ui-skeleton-row::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-bg-surface) 70%, transparent),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: ui-shimmer 1.2s var(--ease-emphasized) infinite;
+}
+@keyframes ui-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* 远端进度条：按钮组底部 2px */
+.action-progress-track {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  bottom: 2px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  overflow: hidden;
+  pointer-events: none;
+}
+.action-progress-bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform var(--duration-base) var(--ease-emphasized);
+}
+/* 还没收到进度事件时：一段短条来回滑动 */
+.action-progress-bar.is-indeterminate {
+  width: 30%;
+  transform: translateX(-100%);
+  transition: none;
+  animation: ui-indeterminate 1.1s var(--ease-emphasized) infinite;
+}
+@keyframes ui-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(340%);
+  }
+}
+
+/* ---------- V5 View Transitions ---------- */
+.view-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+/* 只在对应种类的过渡里给元素命名，其余时间不参与截图 */
+[data-vt='view'] .view-stage {
+  view-transition-name: main-view;
+}
+[data-vt='files'] .file-row {
+  view-transition-name: var(--vt-name);
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+::view-transition-old(main-view) {
+  animation: vt-out var(--duration-fast) var(--ease-in-quick) both;
+}
+::view-transition-new(main-view) {
+  animation: vt-in var(--duration-slow) var(--ease-emphasized) both;
+}
+[data-vt-dir='back']::view-transition-old(main-view) {
+  animation-name: vt-out-back;
+}
+[data-vt-dir='back']::view-transition-new(main-view) {
+  animation-name: vt-in-back;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+@keyframes vt-out-back {
+  to {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+@keyframes vt-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+/* 文件行在分组间移动：浏览器自动插值位置，这里只统一时长与缓动 */
+::view-transition-group(*) {
+  animation-duration: var(--duration-base);
+  animation-timing-function: var(--ease-emphasized);
+}
