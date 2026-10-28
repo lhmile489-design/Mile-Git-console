@@ -13,6 +13,30 @@ import type {
 import * as repoApi from '../api/repo'
 import * as gitApi from '../api/git'
 import * as settingsApi from '../api/settings'
+import { IpcError } from '../api/_invoke'
+import { IPC_CANCELLED } from '../types/ipc'
+
+// 远端长操作的进度（主进程经 git:progress 推送）
+export interface RemoteProgress {
+  repoPath: string
+  op: 'fetch' | 'pull' | 'push'
+  stage: string
+  progress: number
+}
+
+function isRemoteProgress(v: unknown): v is RemoteProgress {
+  if (typeof v !== 'object' || v === null) return false
+  const r = v as Record<string, unknown>
+  return (
+    typeof r.repoPath === 'string' &&
+    (r.op === 'fetch' || r.op === 'pull' || r.op === 'push') &&
+    typeof r.stage === 'string' &&
+    typeof r.progress === 'number'
+  )
+}
+
+// 进度订阅只建立一次（init 可能被 StrictMode 调用两次）
+let progressUnsubscribe: (() => void) | null = null
 
 /**
  * LoadingState 用引用计数代替 boolean，解决并发竞态：
@@ -59,6 +83,8 @@ interface AppState {
   notice: string | null
   // 布局：文件列表（及历史提交列表）卡片宽度，持久化到设置 layout.fileListWidth
   fileListWidth: number
+  // 当前活动仓库的远端操作进度；没有远端操作或尚未收到进度时为 null
+  remoteProgress: RemoteProgress | null
 
   // actions
   setView: (view: AppView) => void
@@ -80,6 +106,7 @@ interface AppState {
   fetch: () => Promise<void>
   pull: () => Promise<void>
   push: (force?: boolean) => Promise<void>
+  cancelRemote: () => Promise<void>
   createBranch: (name: string) => Promise<void>
   switchBranch: (name: string) => Promise<void>
   deleteBranch: (name: string, force?: boolean) => Promise<void>
@@ -109,6 +136,11 @@ export const useAppStore = create<AppState>()((set, get) => {
     try {
       await fn()
     } catch (err) {
+      // 用户主动取消不是错误，给普通提示
+      if (err instanceof IpcError && err.code === IPC_CANCELLED) {
+        set({ notice: '已取消' })
+        return
+      }
       set({ error: err instanceof Error ? err.message : String(err) })
     }
   }
@@ -138,8 +170,19 @@ export const useAppStore = create<AppState>()((set, get) => {
     error: null,
     notice: null,
     fileListWidth: FILE_LIST_WIDTH_DEFAULT,
+    remoteProgress: null,
 
     init: async () => {
+      if (!progressUnsubscribe) {
+        progressUnsubscribe = window.electronAPI.on('git:progress', (payload) => {
+          if (!isRemoteProgress(payload)) return
+          const s = get()
+          // 只展示当前活动仓库、且仍在进行中的操作的进度
+          if (s.loading.action !== payload.op) return
+          if (activeRepoPath(s) !== payload.repoPath) return
+          set({ remoteProgress: payload })
+        })
+      }
       // 布局宽度读取失败不影响启动，保持默认值
       void settingsApi
         .getSetting(FILE_LIST_WIDTH_KEY)
@@ -394,8 +437,8 @@ export const useAppStore = create<AppState>()((set, get) => {
         await gitApi.fetchRemote(repoPath)
         set({ notice: 'Fetch 完成' })
       })
+      set((s) => ({ loading: { ...s.loading, action: null }, remoteProgress: null }))
       await get().refreshStatus()
-      set((s) => ({ loading: { ...s.loading, action: null } }))
     },
 
     pull: async () => {
@@ -410,8 +453,8 @@ export const useAppStore = create<AppState>()((set, get) => {
             : 'Pull 完成'
         })
       })
+      set((s) => ({ loading: { ...s.loading, action: null }, remoteProgress: null }))
       await get().refreshStatus()
-      set((s) => ({ loading: { ...s.loading, action: null } }))
     },
 
     push: async (force = false) => {
@@ -423,8 +466,19 @@ export const useAppStore = create<AppState>()((set, get) => {
         await gitApi.pushRemote(repoPath, force, needUpstream)
         set({ notice: force ? 'Force Push 完成' : 'Push 完成' })
       })
+      set((s) => ({ loading: { ...s.loading, action: null }, remoteProgress: null }))
       await get().refreshStatus()
-      set((s) => ({ loading: { ...s.loading, action: null } }))
+    },
+
+    // 取消正在进行的获取 / 拉取 / 推送；结果由原操作的 run 统一处理（1006 显示「已取消」）
+    cancelRemote: async () => {
+      const repoPath = activeRepoPath(get())
+      if (!repoPath || get().loading.action === null) return
+      try {
+        await gitApi.cancelRemote(repoPath)
+      } catch {
+        // 取消请求本身失败时不打扰用户，原操作会照常结束
+      }
     },
 
     createBranch: async (name) => {

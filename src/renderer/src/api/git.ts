@@ -86,6 +86,10 @@ export const pushRemote = (
 ): Promise<null> =>
   invoke('git:remote:push', { repoPath, force, setUpstream })
 
+// 取消该仓库正在进行的远端操作；被取消的那次调用会以 1006 返回
+export const cancelRemote = (repoPath: string): Promise<null> =>
+  invoke('git:remote:cancel', { repoPath })
+
 // ---- 提交历史 ----
 export const getCommitLog = (
   repoPath: string,

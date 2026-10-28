@@ -1,7 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, Download, Loader2 } from 'lucide-react'
+import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, Download, Loader2, X } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { Button, ConfirmDialog } from '../common'
+
+const REMOTE_OPS = ['fetch', 'pull', 'push'] as const
+type RemoteOp = (typeof REMOTE_OPS)[number]
+
+// git 进度阶段的中文说明；未知阶段统一显示「进行中」
+// stage 取自 git stderr 首个单词（simple-git 转小写）：服务端阶段整体以 "remote:" 开头
+const STAGE_LABEL: Record<string, string> = {
+  'remote:': '远端准备',
+  enumerating: '枚举对象',
+  unpacking: '解包对象',
+  counting: '统计对象',
+  compressing: '压缩对象',
+  receiving: '接收对象',
+  resolving: '处理差异',
+  writing: '写入对象'
+}
+
+// 远端操作开始多久后才显示取消按钮，避免短操作时按钮一闪而过
+const CANCEL_DELAY_MS = 2000
+
+function isRemoteOp(action: string | null): action is RemoteOp {
+  return action !== null && (REMOTE_OPS as readonly string[]).includes(action)
+}
 
 // 获取 / 拉取 / 推送合并为一个按钮组：共享外框，中间 1px 分隔
 function ActionBar(): React.ReactElement {
@@ -10,10 +33,27 @@ function ActionBar(): React.ReactElement {
   const fetchRemote = useAppStore((s) => s.fetch)
   const pull = useAppStore((s) => s.pull)
   const push = useAppStore((s) => s.push)
+  const cancelRemote = useAppStore((s) => s.cancelRemote)
+  const remoteProgress = useAppStore((s) => s.remoteProgress)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmForcePush, setConfirmForcePush] = useState(false)
+  const [showCancel, setShowCancel] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const remoteRunning = isRemoteOp(loadingAction)
+
+  // 远端操作进行超过 CANCEL_DELAY_MS 才露出取消按钮；操作结束立即收起
+  useEffect(() => {
+    if (!remoteRunning) {
+      setShowCancel(false)
+      setCancelling(false)
+      return
+    }
+    const timer = setTimeout(() => setShowCancel(true), CANCEL_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [remoteRunning, loadingAction])
 
   // 点击菜单外关闭
   useEffect(() => {
@@ -42,23 +82,39 @@ function ActionBar(): React.ReactElement {
   const renderIcon = (action: string, icon: React.ReactNode): React.ReactNode =>
     loadingAction === action ? <Loader2 size={16} className="spin" /> : icon
 
+  // 进行中的按钮把文字换成「阶段 百分比」，没收到进度时保持原文字
+  const renderLabel = (action: RemoteOp, label: string): React.ReactNode => {
+    if (loadingAction !== action || !remoteProgress || remoteProgress.op !== action) return label
+    const stage = STAGE_LABEL[remoteProgress.stage] ?? '进行中'
+    return (
+      <span className="action-progress" aria-live="polite">
+        {stage} {Math.round(remoteProgress.progress)}%
+      </span>
+    )
+  }
+
+  const handleCancel = (): void => {
+    setCancelling(true)
+    void cancelRemote()
+  }
+
   return (
     <div className="action-group" ref={menuRef}>
       <Button size="sm" variant="ghost" isDisabled={disabled} onPress={() => void fetchRemote()}>
         {renderIcon('fetch', <Download size={16} />)}
-        获取
+        {renderLabel('fetch', '获取')}
       </Button>
       <span className="action-group-divider" aria-hidden="true" />
       <Button size="sm" variant="ghost" isDisabled={disabled} onPress={() => void pull()}>
         {renderIcon('pull', <ArrowDown size={16} />)}
-        拉取
-        {behind > 0 && <span className="action-badge">{behind}</span>}
+        {renderLabel('pull', '拉取')}
+        {behind > 0 && loadingAction !== 'pull' && <span className="action-badge">{behind}</span>}
       </Button>
       <span className="action-group-divider" aria-hidden="true" />
       <Button size="sm" variant="ghost" isDisabled={disabled} onPress={() => void push(false)}>
         {renderIcon('push', <ArrowUp size={16} />)}
-        推送
-        {ahead > 0 && <span className="action-badge">{ahead}</span>}
+        {renderLabel('push', '推送')}
+        {ahead > 0 && loadingAction !== 'push' && <span className="action-badge">{ahead}</span>}
       </Button>
       <Button
         size="sm"
@@ -72,6 +128,21 @@ function ActionBar(): React.ReactElement {
       >
         <ChevronDown size={16} />
       </Button>
+      {remoteRunning && showCancel && (
+        <>
+          <span className="action-group-divider" aria-hidden="true" />
+          <Button
+            size="sm"
+            variant="ghost"
+            className="action-group-cancel"
+            isDisabled={cancelling}
+            onPress={handleCancel}
+          >
+            <X size={16} />
+            {cancelling ? '正在取消' : '取消'}
+          </Button>
+        </>
+      )}
       {menuOpen && (
         <div className="popover-menu action-group-menu" role="menu">
           <button

@@ -1,7 +1,11 @@
 // Git 操作封装层（simple-git 调用，仅主进程使用）
 import fs from 'fs'
 import path from 'path'
-import simpleGit, { type SimpleGit } from 'simple-git'
+import simpleGit, {
+  type SimpleGit,
+  type SimpleGitOptions,
+  type SimpleGitProgressEvent
+} from 'simple-git'
 import type {
   GitStatus,
   GitFileStatus,
@@ -18,13 +22,19 @@ import type {
 export class GitError extends Error {
   constructor(
     message: string,
-    public readonly kind: 'git' | 'remote' | 'conflict' = 'git'
+    public readonly kind: 'git' | 'remote' | 'conflict' | 'cancelled' = 'git'
   ) {
     super(message)
   }
 }
 
-function git(repoPath: string): SimpleGit {
+// 远端长操作的运行选项：abort 用于取消，onProgress 用于推送进度
+export interface GitRunOptions {
+  signal?: AbortSignal
+  onProgress?: (e: SimpleGitProgressEvent) => void
+}
+
+function git(repoPath: string, run: GitRunOptions = {}): SimpleGit {
   // 过滤 Electron/shell 环境中会干扰 git 子进程的变量：
   // - GIT_EDITOR / EDITOR / VISUAL：git 需要编辑器时会尝试执行，值无效会报 "not permitted"
   // - GIT_SSH / GIT_SSH_COMMAND：simple-git 安全检查会拦截
@@ -38,7 +48,11 @@ function git(repoPath: string): SimpleGit {
   ]
   for (const v of stripVars) delete safeEnv[v]
 
-  return simpleGit(repoPath).env({
+  const options: Partial<SimpleGitOptions> = { baseDir: repoPath }
+  if (run.signal) options.abort = run.signal
+  if (run.onProgress) options.progress = run.onProgress
+
+  return simpleGit(options).env({
     ...safeEnv,
     // 强制使用非交互模式：Electron 子进程无 tty，不能弹密码/编辑器窗口
     GIT_TERMINAL_PROMPT: '0',
@@ -65,6 +79,7 @@ async function wrap<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn()
   } catch (err) {
+    if (err instanceof GitError) throw err
     const msg = err instanceof Error ? err.message : String(err)
     if (isConflictError(msg)) throw new GitError(msg, 'conflict')
     if (isRemoteError(msg)) throw new GitError(msg, 'remote')
@@ -402,17 +417,31 @@ export async function deleteBranch(
 }
 
 // ---------------------------------------------------------------- 远端
-export async function fetchRemote(repoPath: string): Promise<void> {
-  return wrap(() => git(repoPath).fetch().then(() => undefined))
+// 被用户取消时统一抛出 cancelled，不当作 git 失败
+function rethrowIfCancelled(run: GitRunOptions): void {
+  if (run.signal?.aborted) throw new GitError('已取消', 'cancelled')
+}
+
+export async function fetchRemote(repoPath: string, run: GitRunOptions = {}): Promise<void> {
+  return wrap(async () => {
+    try {
+      await git(repoPath, run).fetch()
+    } catch (err) {
+      rethrowIfCancelled(run)
+      throw err
+    }
+  })
 }
 
 export async function pullRemote(
-  repoPath: string
+  repoPath: string,
+  run: GitRunOptions = {}
 ): Promise<{ hasConflict: boolean }> {
   try {
-    await git(repoPath).pull()
+    await git(repoPath, run).pull()
     return { hasConflict: false }
   } catch (err) {
+    rethrowIfCancelled(run)
     const msg = err instanceof Error ? err.message : String(err)
     if (isConflictError(msg)) return { hasConflict: true }
     if (isRemoteError(msg)) throw new GitError(msg, 'remote')
@@ -422,7 +451,8 @@ export async function pullRemote(
 
 export async function pushRemote(
   repoPath: string,
-  options: { force?: boolean; setUpstream?: boolean; remote?: string } = {}
+  options: { force?: boolean; setUpstream?: boolean; remote?: string } = {},
+  run: GitRunOptions = {}
 ): Promise<void> {
   return wrap(async () => {
     const status = await git(repoPath).status()
@@ -432,7 +462,12 @@ export async function pushRemote(
     if (options.setUpstream || !status.tracking) {
       args.push('-u', options.remote ?? 'origin', status.current ?? 'HEAD')
     }
-    await git(repoPath).push(args)
+    try {
+      await git(repoPath, run).push(args)
+    } catch (err) {
+      rethrowIfCancelled(run)
+      throw err
+    }
   })
 }
 

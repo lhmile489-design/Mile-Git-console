@@ -532,6 +532,22 @@
 .action-group-menu {
   right: 0;
 }
+/* 远端操作进度文字：等宽数字，宽度固定，避免百分比跳动时按钮抖动 */
+.action-progress {
+  display: inline-block;
+  min-width: 88px;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+.action-group .action-group-cancel {
+  color: var(--color-danger);
+}
+.action-group .action-group-cancel svg {
+  color: var(--color-danger);
+}
+.action-group .action-group-cancel[data-hovered]:not([data-disabled]) {
+  background: var(--color-danger-bg);
+}
 .action-badge {
   display: inline-flex;
   align-items: center;

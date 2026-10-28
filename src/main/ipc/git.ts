@@ -6,6 +6,7 @@ import {
   IPC_GIT_FAILED,
   IPC_REMOTE_FAILED,
   IPC_MERGE_CONFLICT,
+  IPC_CANCELLED,
   IPC_BAD_PAYLOAD,
   IPC_UNKNOWN,
   type IpcResponse,
@@ -30,7 +31,9 @@ function gitFail<T = never>(err: unknown): IpcResponse<T> {
         ? IPC_REMOTE_FAILED
         : err.kind === 'conflict'
           ? IPC_MERGE_CONFLICT
-          : IPC_GIT_FAILED
+          : err.kind === 'cancelled'
+            ? IPC_CANCELLED
+            : IPC_GIT_FAILED
     return fail(code, err.message)
   }
   return fail(IPC_UNKNOWN, String(err))

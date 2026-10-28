@@ -41,6 +41,7 @@ const ALLOWED_INVOKE_CHANNELS: ReadonlySet<string> = new Set([
   'git:remote:fetch',
   'git:remote:pull',
   'git:remote:push',
+  'git:remote:cancel',
   'git:log:list',
   'git:log:detail',
   'git:log:fileDiff',
@@ -71,23 +72,20 @@ const api = {
   },
 
   /**
-   * 监听主进程推送的事件（如 Git 操作进度）
-   * 只允许监听白名单中的 channel。
+   * 监听主进程推送的事件（如 Git 操作进度），只允许白名单中的 channel。
+   * 返回取消订阅函数：包装后的监听器只存在于 preload 内部，
+   * 渲染进程无法用原函数调用 removeListener，所以必须由这里闭包持有。
    */
-  on: (channel: string, listener: (...args: unknown[]) => void): void => {
+  on: (channel: string, listener: (...args: unknown[]) => void): (() => void) => {
     if (!ALLOWED_LISTEN_CHANNELS.has(channel)) {
       console.warn(`[preload] 不允许监听的 IPC channel：${channel}`)
-      return
+      return () => undefined
     }
-    ipcRenderer.on(channel, (_event, ...args) => listener(...args))
-  },
-
-  /**
-   * 移除事件监听
-   */
-  off: (channel: string, listener: (...args: unknown[]) => void): void => {
-    if (!ALLOWED_LISTEN_CHANNELS.has(channel)) return
-    ipcRenderer.removeListener(channel, listener)
+    const wrapped = (_event: unknown, ...args: unknown[]): void => listener(...args)
+    ipcRenderer.on(channel, wrapped)
+    return () => {
+      ipcRenderer.removeListener(channel, wrapped)
+    }
   }
 }
 
