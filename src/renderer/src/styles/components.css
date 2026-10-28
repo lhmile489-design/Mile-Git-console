@@ -332,9 +332,16 @@
   background: var(--color-danger-bg);
   color: var(--color-danger);
 }
-.toast-notice .toast-icon {
+.toast-success .toast-icon {
   background: var(--color-git-added-bg);
   color: var(--color-git-added);
+}
+.toast-info .toast-icon {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.toast-action {
+  flex-shrink: 0;
 }
 .toast-text {
   flex: 1;

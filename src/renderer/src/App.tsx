@@ -1,13 +1,10 @@
 import React, { useEffect } from 'react'
 import {
-  CircleAlert,
-  CircleCheck,
   FolderOpen,
   GitFork,
   History,
   List,
-  RefreshCw,
-  X
+  RefreshCw
 } from 'lucide-react'
 import { useAppStore, useActiveRepo, isStatusLoading } from './store/appStore'
 import Titlebar from './components/layout/Titlebar'
@@ -20,55 +17,9 @@ import CommitHistory from './components/git/CommitHistory'
 import DiffViewer from './components/git/DiffViewer'
 import SettingsPage from './pages/SettingsPage'
 import Workspace from './components/layout/Workspace'
+import ToastStack from './components/layout/ToastStack'
 import { useFocusRefresh } from './hooks/useFocusRefresh'
 import { Button, IconButton, Panel, Segmented } from './components/common'
-
-function FeedbackBars(): React.ReactElement | null {
-  const error = useAppStore((s) => s.error)
-  const notice = useAppStore((s) => s.notice)
-  const clearFeedback = useAppStore((s) => s.clearFeedback)
-
-  // notice 3 秒后自动消失
-  useEffect(() => {
-    if (!notice) return
-    const timer = setTimeout(() => clearFeedback(), 3000)
-    return () => clearTimeout(timer)
-  }, [notice, clearFeedback])
-
-  if (!error && !notice) return null
-
-  // 浮在右下角的提示卡片：错误需手动关闭，普通提示 3 秒后自动消失
-  return (
-    <div className="toast-stack">
-      {error && (
-        <div className="toast toast-error" role="alert">
-          <span className="toast-icon" aria-hidden="true">
-            <CircleAlert size={16} />
-          </span>
-          <span className="toast-text selectable" title={error}>
-            {error}
-          </span>
-          <IconButton label="关闭提示" size="sm" onPress={clearFeedback}>
-            <X size={14} />
-          </IconButton>
-        </div>
-      )}
-      {notice && (
-        <div className="toast toast-notice" role="status">
-          <span className="toast-icon" aria-hidden="true">
-            <CircleCheck size={16} />
-          </span>
-          <span className="toast-text" title={notice}>
-            {notice}
-          </span>
-          <IconButton label="关闭提示" size="sm" onPress={clearFeedback}>
-            <X size={14} />
-          </IconButton>
-        </div>
-      )}
-    </div>
-  )
-}
 
 function Welcome(): React.ReactElement {
   const importRepo = useAppStore((s) => s.importRepo)
@@ -168,7 +119,7 @@ function App(): React.ReactElement {
     <>
       <Titlebar />
       {view === 'settings' ? <SettingsPage /> : <MainLayout />}
-      <FeedbackBars />
+      <ToastStack />
     </>
   )
 }

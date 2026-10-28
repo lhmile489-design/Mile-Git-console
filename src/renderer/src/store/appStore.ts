@@ -35,6 +35,22 @@ function isRemoteProgress(v: unknown): v is RemoteProgress {
   )
 }
 
+// 提示卡片：error 不自动消失；success / info 由界面按是否带操作决定停留时长
+export type ToastKind = 'error' | 'success' | 'info'
+export interface ToastAction {
+  label: string
+  run: () => void
+}
+export interface Toast {
+  id: number
+  kind: ToastKind
+  text: string
+  action?: ToastAction
+}
+// 同时最多保留的提示条数，超出时丢弃最旧的
+export const TOAST_LIMIT = 3
+let toastSeq = 0
+
 // 进度订阅只建立一次（init 可能被 StrictMode 调用两次）
 let progressUnsubscribe: (() => void) | null = null
 
@@ -79,8 +95,7 @@ interface AppState {
   selectedCommitFilePath: string | null
   // 反馈
   loading: LoadingState
-  error: string | null
-  notice: string | null
+  toasts: Toast[]
   // 布局：文件列表（及历史提交列表）卡片宽度，持久化到设置 layout.fileListWidth
   fileListWidth: number
   // 当前活动仓库的远端操作进度；没有远端操作或尚未收到进度时为 null
@@ -110,7 +125,8 @@ interface AppState {
   createBranch: (name: string) => Promise<void>
   switchBranch: (name: string) => Promise<void>
   deleteBranch: (name: string, force?: boolean) => Promise<void>
-  clearFeedback: () => void
+  pushToast: (kind: ToastKind, text: string, action?: ToastAction) => void
+  dismissToast: (id: number) => void
   setFileListWidth: (width: number) => void
   persistFileListWidth: () => Promise<void>
 }
@@ -131,6 +147,15 @@ function activeRepoPath(state: AppState): string | null {
 }
 
 export const useAppStore = create<AppState>()((set, get) => {
+  // 内部工具：追加一条提示。与最近一条完全相同时不重复追加
+  const pushToast = (kind: ToastKind, text: string, action?: ToastAction): void => {
+    const toasts = get().toasts
+    const last = toasts[toasts.length - 1]
+    if (last && last.kind === kind && last.text === text && !action) return
+    const next = [...toasts, { id: ++toastSeq, kind, text, ...(action ? { action } : {}) }]
+    set({ toasts: next.slice(-TOAST_LIMIT) })
+  }
+
   // 内部工具：统一错误处理
   const run = async (fn: () => Promise<void>): Promise<void> => {
     try {
@@ -138,10 +163,10 @@ export const useAppStore = create<AppState>()((set, get) => {
     } catch (err) {
       // 用户主动取消不是错误，给普通提示
       if (err instanceof IpcError && err.code === IPC_CANCELLED) {
-        set({ notice: '已取消' })
+        pushToast('info', '已取消')
         return
       }
-      set({ error: err instanceof Error ? err.message : String(err) })
+      pushToast('error', err instanceof Error ? err.message : String(err))
     }
   }
 
@@ -167,8 +192,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       isLoadingDetail: false,
       action: null
     },
-    error: null,
-    notice: null,
+    toasts: [],
     fileListWidth: FILE_LIST_WIDTH_DEFAULT,
     remoteProgress: null,
 
@@ -207,7 +231,8 @@ export const useAppStore = create<AppState>()((set, get) => {
       await run(async () => {
         const repo = await repoApi.addRepo(picked.path)
         const repos = await repoApi.listRepos()
-        set({ repos, notice: `已导入仓库：${repo.name}` })
+        set({ repos })
+        pushToast('success', `已导入仓库：${repo.name}`)
         await get().selectRepo(repo.id)
       })
     },
@@ -252,7 +277,7 @@ export const useAppStore = create<AppState>()((set, get) => {
         selectedFile: null,
         selectedCommitHash: null,
         selectedCommitFilePath: null,
-        error: null
+        toasts: get().toasts.filter((t) => t.kind !== 'error')
       })
       // 更新最近打开时间，确保下次启动仍选中此仓库
       void repoApi.touchRepo(id).catch(() => {
@@ -366,7 +391,8 @@ export const useAppStore = create<AppState>()((set, get) => {
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        set({ commitDetailError: msg, error: msg })
+        set({ commitDetailError: msg })
+        pushToast('error', msg)
       } finally {
         set((s) => ({ loading: { ...s.loading, isLoadingDetail: false } }))
       }
@@ -408,7 +434,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       if (!repoPath) return
       await run(async () => {
         await gitApi.discardFiles(repoPath, paths)
-        set({ notice: '已丢弃所选变更' })
+        pushToast('success', '已丢弃所选变更')
         await get().refreshStatus()
       })
     },
@@ -419,7 +445,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       let success = false
       await run(async () => {
         const result = await gitApi.commitChanges(repoPath, message, description)
-        set({ notice: `提交成功 ${result.commitHash.slice(0, 7)}` })
+        pushToast('success', `提交成功 ${result.commitHash.slice(0, 7)}`)
         success = true
       })
       if (success) {
@@ -435,7 +461,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       set((s) => ({ loading: { ...s.loading, action: 'fetch' } }))
       await run(async () => {
         await gitApi.fetchRemote(repoPath)
-        set({ notice: 'Fetch 完成' })
+        pushToast('success', 'Fetch 完成')
       })
       set((s) => ({ loading: { ...s.loading, action: null }, remoteProgress: null }))
       await get().refreshStatus()
@@ -447,11 +473,8 @@ export const useAppStore = create<AppState>()((set, get) => {
       set((s) => ({ loading: { ...s.loading, action: 'pull' } }))
       await run(async () => {
         const result = await gitApi.pullRemote(repoPath)
-        set({
-          notice: result.hasConflict
-            ? 'Pull 产生合并冲突，请解决后提交'
-            : 'Pull 完成'
-        })
+        if (result.hasConflict) pushToast('error', 'Pull 产生合并冲突，请解决后提交')
+        else pushToast('success', 'Pull 完成')
       })
       set((s) => ({ loading: { ...s.loading, action: null }, remoteProgress: null }))
       await get().refreshStatus()
@@ -464,7 +487,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       await run(async () => {
         const needUpstream = !get().gitStatus?.hasRemote
         await gitApi.pushRemote(repoPath, force, needUpstream)
-        set({ notice: force ? 'Force Push 完成' : 'Push 完成' })
+        pushToast('success', force ? 'Force Push 完成' : 'Push 完成')
       })
       set((s) => ({ loading: { ...s.loading, action: null }, remoteProgress: null }))
       await get().refreshStatus()
@@ -486,7 +509,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       if (!repoPath) return
       await run(async () => {
         await gitApi.createBranch(repoPath, name)
-        set({ notice: `已创建并切换到分支：${name}` })
+        pushToast('success', `已创建并切换到分支：${name}`)
       })
       await get().refreshStatus()
       await get().refreshBranches()
@@ -498,7 +521,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       set((s) => ({ loading: { ...s.loading, action: 'switch' } }))
       await run(async () => {
         await gitApi.switchBranch(repoPath, name)
-        set({ notice: `已切换到分支：${name}` })
+        pushToast('success', `已切换到分支：${name}`)
       })
       await get().refreshStatus()
       await get().refreshBranches()
@@ -511,12 +534,14 @@ export const useAppStore = create<AppState>()((set, get) => {
       if (!repoPath) return
       await run(async () => {
         await gitApi.deleteBranch(repoPath, name, force)
-        set({ notice: `已删除分支：${name}` })
+        pushToast('success', `已删除分支：${name}`)
       })
       await get().refreshBranches()
     },
 
-    clearFeedback: () => set({ error: null, notice: null }),
+    pushToast,
+
+    dismissToast: (id) => set({ toasts: get().toasts.filter((t) => t.id !== id) }),
 
     // 拖拽过程中只改内存状态，松手时再持久化，避免每帧写一次设置文件
     setFileListWidth: (width) => set({ fileListWidth: clampFileListWidth(width) }),
