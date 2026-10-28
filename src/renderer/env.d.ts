@@ -7,6 +7,7 @@ declare global {
     electronAPI: {
       invoke: <T = unknown>(channel: string, ...args: unknown[]) => Promise<IpcResponse<T>>
       on: (channel: string, listener: (...args: unknown[]) => void) => () => void
+      getPathForFile: (file: File) => string
     }
   }
 }

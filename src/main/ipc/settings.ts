@@ -31,6 +31,11 @@ export async function getSetting(key: string): Promise<unknown> {
   return store.get(key)
 }
 
+export async function setSetting(key: string, value: unknown): Promise<void> {
+  const store = await getStore()
+  store.set(key, value)
+}
+
 export function registerSettingsIpc(): void {
   ipcMain.handle(
     'settings:get',

@@ -5,6 +5,7 @@ import { initDatabase } from './storage/db'
 import { registerAllIpc } from './ipc'
 import { createTray } from './tray'
 import { loadWindowState, trackWindowState } from './windowState'
+import { showTrayHintOnce } from './trayHint'
 
 function createWindow(): void {
   // 加载应用图标（resources/ 目录，开发模式与生产模式路径一致）
@@ -53,6 +54,7 @@ function createWindow(): void {
     event.preventDefault()
     saveWindowState()
     mainWindow.hide()
+    void showTrayHintOnce()
     if (process.platform !== 'darwin') {
       mainWindow.setSkipTaskbar(true)
     } else {

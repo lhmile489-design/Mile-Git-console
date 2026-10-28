@@ -105,6 +105,7 @@ interface AppState {
   setView: (view: AppView) => void
   init: () => Promise<void>
   importRepo: () => Promise<void>
+  importRepoPath: (path: string) => Promise<void>
   removeRepo: (id: number) => Promise<void>
   relocateRepo: (id: number) => Promise<void>
   selectRepo: (id: number) => Promise<void>
@@ -228,8 +229,13 @@ export const useAppStore = create<AppState>()((set, get) => {
     importRepo: async () => {
       const picked = await repoApi.openFolderDialog()
       if (!picked) return // 用户取消
+      await get().importRepoPath(picked.path)
+    },
+
+    // 按路径导入（文件夹对话框与拖拽导入共用）
+    importRepoPath: async (path) => {
       await run(async () => {
-        const repo = await repoApi.addRepo(picked.path)
+        const repo = await repoApi.addRepo(path)
         const repos = await repoApi.listRepos()
         set({ repos })
         pushToast('success', `已导入仓库：${repo.name}`)

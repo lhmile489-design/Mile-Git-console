@@ -57,3 +57,15 @@ interface RemoteProgress {
   - 2002：缺少 id 或 path；新路径已被列表中另一个仓库占用；id 不存在
   - 1003：新路径不是有效的 Git 仓库
   - 2001：数据库写入失败
+
+## A8 拖拽导入与托盘提示
+
+### 新增：preload `window.electronAPI.getPathForFile(file: File): string`
+
+- 取拖入文件或文件夹的本地路径，内部调用 Electron `webUtils.getPathForFile`。Electron 32 起 `File.path` 已移除，只能这样获取。
+- 不是 IPC channel，不经过白名单。
+
+### 新增设置键：`ui.trayHintShown`
+
+- 布尔值。第一次点关闭（隐藏到托盘）时由主进程写为 `true`，并弹一次系统通知；之后不再提示。
+- 没有新增 IPC channel。

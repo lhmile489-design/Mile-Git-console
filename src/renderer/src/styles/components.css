@@ -1423,3 +1423,45 @@
   color: var(--color-text-primary);
   user-select: text;
 }
+
+/* ---------- 拖拽导入遮罩 ---------- */
+.drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--space-8);
+  background: var(--color-backdrop);
+  pointer-events: none;
+  animation: drop-in var(--transition-fast);
+}
+@keyframes drop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.drop-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-12);
+  border: 2px dashed var(--color-primary);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
+  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  color: var(--color-primary);
+}
+.drop-overlay-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-heavy);
+  color: var(--color-text-primary);
+}
+.drop-overlay-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}

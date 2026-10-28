@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // 统一响应类型
@@ -77,6 +77,11 @@ const api = {
    * 返回取消订阅函数：包装后的监听器只存在于 preload 内部，
    * 渲染进程无法用原函数调用 removeListener，所以必须由这里闭包持有。
    */
+  /**
+   * 取拖入文件（夹）的本地路径。Electron 32 起 File.path 已移除，只能经 webUtils 获取
+   */
+  getPathForFile: (file: File): string => webUtils.getPathForFile(file),
+
   on: (channel: string, listener: (...args: unknown[]) => void): (() => void) => {
     if (!ALLOWED_LISTEN_CHANNELS.has(channel)) {
       console.warn(`[preload] 不允许监听的 IPC channel：${channel}`)

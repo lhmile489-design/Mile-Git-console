@@ -20,6 +20,7 @@ import Workspace from './components/layout/Workspace'
 import ToastStack from './components/layout/ToastStack'
 import { useFocusRefresh } from './hooks/useFocusRefresh'
 import { useShortcuts } from './hooks/useShortcuts'
+import { useFolderDrop } from './hooks/useFolderDrop'
 import { shortcutHint } from './commands/registry'
 import { Button, IconButton, Panel, Segmented } from './components/common'
 
@@ -117,12 +118,22 @@ function App(): React.ReactElement {
 
   useFocusRefresh()
   useShortcuts()
+  const dragging = useFolderDrop()
 
   return (
     <>
       <Titlebar />
       {view === 'settings' ? <SettingsPage /> : <MainLayout />}
       <ToastStack />
+      {dragging && (
+        <div className="drop-overlay" aria-hidden="true">
+          <div className="drop-overlay-card">
+            <FolderOpen size={32} />
+            <span className="drop-overlay-title">松开即可导入仓库</span>
+            <span className="drop-overlay-text">支持一次拖入多个 Git 仓库文件夹</span>
+          </div>
+        </div>
+      )}
     </>
   )
 }
