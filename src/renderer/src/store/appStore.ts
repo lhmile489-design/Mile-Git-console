@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import type {
   RepoItem,
+  WorkspaceItem,
   GitStatus,
   BranchInfo,
   CommitEntry,
@@ -11,6 +12,7 @@ import type {
   SelectedFile
 } from '../types/ipc'
 import * as repoApi from '../api/repo'
+import * as workspaceApi from '../api/workspace'
 import * as gitApi from '../api/git'
 import * as settingsApi from '../api/settings'
 import { IpcError } from '../api/_invoke'
@@ -79,6 +81,7 @@ export type AppView = 'main' | 'settings'
 interface AppState {
   // 数据
   repos: RepoItem[]
+  workspaces: WorkspaceItem[]
   activeRepoId: number | null
   gitStatus: GitStatus | null
   branches: BranchInfo[]
@@ -113,6 +116,15 @@ interface AppState {
   importRepoPath: (path: string) => Promise<void>
   removeRepo: (id: number) => Promise<void>
   relocateRepo: (id: number) => Promise<void>
+  // 别名 / 备注 / 所属工作区；传 null 表示清空，不传的字段保持不变
+  updateRepoMeta: (
+    id: number,
+    meta: { alias?: string | null; note?: string | null; workspaceId?: number | null }
+  ) => Promise<boolean>
+  createWorkspace: (name: string) => Promise<WorkspaceItem | null>
+  renameWorkspace: (id: number, name: string) => Promise<boolean>
+  deleteWorkspace: (id: number) => Promise<void>
+  toggleWorkspace: (id: number) => Promise<void>
   selectRepo: (id: number) => Promise<void>
   refreshStatus: (opts?: { silent?: boolean; transition?: boolean }) => Promise<void>
   refreshBranches: () => Promise<void>
@@ -184,6 +196,7 @@ export const useAppStore = create<AppState>()((set, get) => {
 
   return {
     repos: [],
+    workspaces: [],
     activeRepoId: null,
     gitStatus: null,
     branches: [],
@@ -230,8 +243,11 @@ export const useAppStore = create<AppState>()((set, get) => {
         })
         .catch(() => {})
       await run(async () => {
-        const repos = await repoApi.listRepos()
-        set({ repos })
+        const [repos, workspaces] = await Promise.all([
+          repoApi.listRepos(),
+          workspaceApi.listWorkspaces()
+        ])
+        set({ repos, workspaces })
         const first = repos.find((r) => !r.missing)
         if (first) await get().selectRepo(first.id)
       })
@@ -291,6 +307,62 @@ export const useAppStore = create<AppState>()((set, get) => {
         pushToast('success', `已重新定位到：${repo.path}`)
         await get().selectRepo(repo.id)
       })
+    },
+
+    // 别名 / 备注 / 所属工作区：只传需要改的字段，其余保持不变
+    updateRepoMeta: async (id, meta) => {
+      await run(async () => {
+        await repoApi.updateRepoMeta(id, meta)
+        set({ repos: await repoApi.listRepos() })
+      })
+    },
+
+    createWorkspace: async (name) => {
+      let created: WorkspaceItem | null = null
+      await run(async () => {
+        created = await workspaceApi.createWorkspace(name)
+        set({ workspaces: await workspaceApi.listWorkspaces() })
+      })
+      return created
+    },
+
+    renameWorkspace: async (id, name) => {
+      let done = false
+      await run(async () => {
+        await workspaceApi.renameWorkspace(id, name)
+        set({ workspaces: await workspaceApi.listWorkspaces() })
+        done = true
+      })
+      return done
+    },
+
+    // 删除工作区：仓库回到未分组，需要同时刷新仓库列表
+    deleteWorkspace: async (id) => {
+      await run(async () => {
+        await workspaceApi.deleteWorkspace(id)
+        const [repos, workspaces] = await Promise.all([
+          repoApi.listRepos(),
+          workspaceApi.listWorkspaces()
+        ])
+        set({ repos, workspaces })
+      })
+    },
+
+    // 折叠状态先乐观更新，再落库；落库失败静默回滚
+    toggleWorkspace: async (id) => {
+      const target = get().workspaces.find((w) => w.id === id)
+      if (!target) return
+      const next = !target.collapsed
+      const apply = (collapsed: boolean): void =>
+        set((s) => ({
+          workspaces: s.workspaces.map((w) => (w.id === id ? { ...w, collapsed } : w))
+        }))
+      apply(next)
+      try {
+        await workspaceApi.setWorkspaceCollapsed(id, next)
+      } catch {
+        apply(!next)
+      }
     },
 
     selectRepo: async (id) => {

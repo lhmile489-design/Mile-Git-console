@@ -2,11 +2,13 @@
 
 桌面端 Git 仓库管理工具，基于 Electron + React + TypeScript。在一个窗口里管理多个本地仓库：查看工作区变更、暂存与提交、切换和新建分支、浏览提交历史，以及获取、拉取、推送远端。
 
-当前版本：`2.2.0`
+当前版本：`2.3.0`
 
 ## 功能
 
-- 仓库管理：导入本地仓库、搜索、移除（只移除列表记录，不删磁盘文件）
+- 仓库管理：导入本地仓库、移除（只移除列表记录，不删磁盘文件）
+- 工作区分类：把仓库整理到命名的工作区下，分组可折叠、重命名、删除（删除后仓库回到「未分组」）
+- 别名与备注：给仓库设置别名和备注，不改磁盘目录名；搜索可匹配名称、别名、备注和路径
 - 工作区：暂存 / 取消暂存（单个、批量勾选、全部）、丢弃更改（需二次确认）、提交摘要与描述
 - Diff：按行显示增删，支持在 Diff 卡片头直接暂存或取消暂存
 - 分支：切换、新建本地分支
@@ -21,8 +23,8 @@
 | 运行时 | Electron 33 |
 | 渲染进程 | React 18 + TypeScript（strict）+ Zustand |
 | 组件 | `react-aria-components` 负责交互与无障碍，视觉自绘（`src/renderer/src/components/common/`） |
-| 样式 | CSS 变量设计令牌（`src/renderer/src/styles/tokens.css`），进化柔性 UI 风格 |
-| 字体 | Nunito（`@fontsource/nunito` 本地打包），中文回退微软雅黑 UI / 苹方 |
+| 样式 | CSS 变量设计令牌（`src/renderer/src/styles/tokens.css`），微交互主题 |
+| 字体 | Manrope 标题 + Inter 正文（`@fontsource` 本地打包），中文回退微软雅黑 UI / 苹方 |
 | 图标 | `lucide-react`，线宽 1.75 |
 | Git | `simple-git`（仅主进程） |
 | 存储 | `better-sqlite3`（仓库列表、操作日志）、`electron-store`（设置） |
@@ -82,6 +84,8 @@ src/
 ## 文档
 
 - `CLAUDE.md`：本端开发规范
-- `docs/UI重构文档.md`：设计令牌、布局与组件规格、实施记录
+- `docs/UI微交互主题.md`：当前主题的令牌与动效规格
+- `docs/develop/代码审查问题清单.md`：代码审查问题与修复状态
+- `docs/UI重构文档.md`：早期柔性 UI 的布局与组件规格（配色与字体已被微交互主题取代）
 - `docs/踩坑记录.md`：开发中遇到的问题与处理方式
 - `../docs/IPC契约.md`、`../docs/数据库设计.md`：IPC 契约与表结构

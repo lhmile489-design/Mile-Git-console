@@ -175,17 +175,6 @@
 .repo-item.active {
   background-color: var(--color-bg-selected);
 }
-/* 选中项左侧 3px 主色竖条 */
-.repo-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: var(--space-2);
-  bottom: var(--space-2);
-  width: 3px;
-  border-radius: var(--radius-pill);
-  background-color: var(--color-primary);
-}
 .repo-item-main {
   flex: 1;
   min-width: 0;
@@ -238,11 +227,14 @@
   margin-right: var(--space-1);
   vertical-align: -2px;
 }
-.repo-item-remove {
+/* 行内操作（编辑、移除）：悬停或键盘聚焦时才出现 */
+.repo-item-action {
   flex-shrink: 0;
-  margin-right: var(--space-2);
   opacity: 0;
   transition: opacity var(--transition-fast);
+}
+.repo-item-remove {
+  margin-right: var(--space-2);
 }
 /* 失效仓库：目录被移走或删除 */
 .repo-item.is-missing .repo-item-icon {
@@ -257,11 +249,88 @@
 .repo-item-relocate {
   flex-shrink: 0;
 }
-.repo-item.is-missing .repo-item-remove {
+.repo-item.is-missing .repo-item-action {
   opacity: 1;
 }
-.repo-item:hover .repo-item-remove,
-.repo-item-remove[data-focus-visible] {
+.repo-item:hover .repo-item-action,
+.repo-item-action[data-focus-visible] {
+  opacity: 1;
+}
+
+/* ---------- 工作区分组 ---------- */
+.sidebar-header-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+.ws-group + .ws-group,
+.ws-group + .repo-item,
+.repo-item + .ws-group {
+  margin-top: var(--space-2);
+}
+.ws-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-right: var(--space-1);
+}
+.ws-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  font: inherit;
+  color: var(--color-text-secondary);
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+button.ws-toggle:hover {
+  background-color: var(--color-bg-hover);
+}
+button.ws-toggle:focus-visible {
+  outline-offset: -2px;
+}
+.ws-toggle.is-static {
+  cursor: default;
+  padding-left: var(--space-2);
+}
+.ws-chevron {
+  flex-shrink: 0;
+  transition: transform var(--duration-instant) var(--ease-soft);
+}
+.ws-chevron.is-open {
+  transform: rotate(90deg);
+}
+.ws-name {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws-count {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.ws-actions {
+  flex-shrink: 0;
+  display: inline-flex;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+.ws-header:hover .ws-actions,
+.ws-actions:focus-within {
   opacity: 1;
 }
 .sidebar-footer {
@@ -724,7 +793,6 @@
 }
 .file-row.selected {
   background: var(--color-bg-selected);
-  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 .file-row-main {
   flex: 1;
@@ -1009,7 +1077,6 @@
 }
 .commit-row.selected {
   background: var(--color-bg-selected);
-  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 .commit-row:focus-visible {
   outline-offset: -2px;
@@ -1232,7 +1299,6 @@
 }
 .commit-file-row.selected {
   background: var(--color-bg-selected);
-  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 .commit-file-row:focus-visible {
   outline-offset: -2px;
@@ -1644,7 +1710,6 @@
 }
 .palette-item.is-active {
   background: var(--color-bg-selected);
-  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 .palette-item-icon {
   display: inline-flex;
@@ -1731,10 +1796,6 @@
   background: transparent;
   box-shadow: none;
 }
-.repo-item.active::before {
-  display: none;
-}
-
 /* 列表依次出现：只作用于前 8 项，之后的行不做动画，避免长列表拖慢 */
 @keyframes ui-list-in {
   from {

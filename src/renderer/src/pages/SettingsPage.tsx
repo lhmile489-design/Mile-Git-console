@@ -149,7 +149,7 @@ function SettingsPage(): React.ReactElement {
             </div>
             <div className="settings-row">
               <dt>版本</dt>
-              <dd>2.2.0</dd>
+              <dd>2.3.0</dd>
             </div>
             <div className="settings-row">
               <dt>源代码</dt>

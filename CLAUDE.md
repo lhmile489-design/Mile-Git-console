@@ -2,7 +2,7 @@
 
 > 本文件适用于在 `Git-Management-electron/` 目录下启动的 Electron 开发 session。
 > 主调度 session 在根目录 `Mile-Git-Management/`，不直接读写本目录源码。
-> 最后更新：2026-10-28（v2：UI 重构为进化柔性 UI，移除 React Spectrum）
+> 最后更新：2026-10-29（v3：微交互主题、工作区分类与仓库别名 / 备注）
 
 ---
 
@@ -12,7 +12,7 @@
 |---|---|
 | 应用名 | Mile Git Management |
 | 应用 ID | `com.mile.git-management` |
-| 版本 | `2.2.0` |
+| 版本 | `2.3.0` |
 | 入口（主进程） | `src/main/index.ts` |
 | 入口（渲染进程） | `src/renderer/src/main.tsx` |
 | Preload | `src/preload/index.ts` |
@@ -221,7 +221,11 @@ export async function getGitStatus(repoPath: string) {
 - **禁止使用设计令牌外的字号**，只允许 `--text-xs` 到 `--text-2xl`
 - **禁止使用间距令牌外的数值**（如 `margin: 13px`），只允许 `--space-1` 到 `--space-16`
 
-### 7.2 基础组件约定（进化柔性 UI，2026-10-28 起）
+### 7.2 基础组件约定（微交互主题，规格见 `docs/UI微交互主题.md`）
+
+- 仓库分类：`workspaces` 表 + `repositories.alias / note / workspace_id`（迁移 `002_workspaces_alias.sql`）。界面上显示仓库名一律用 `repoDisplayName(repo)`（别名优先，回退目录名），不要直接用 `repo.name`
+- 选中项只用淡蓝底，不画左侧竖条
+- 输入类对话框用 `FormDialog`，破坏性确认用 `ConfirmDialog`
 
 - React Spectrum 已移除。交互组件统一用 `components/common/`（`Button`、`IconButton`、`ConfirmDialog`、`Segmented`、`Panel`、`ResizeHandle`），业务组件不直接引用 `react-aria-components`
 - 基础组件样式在 `styles/ui.css`（类名 `ui-` 前缀，交互状态用 react-aria 的 `data-hovered` / `data-pressed` / `data-focus-visible`）

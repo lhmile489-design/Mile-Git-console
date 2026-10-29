@@ -24,6 +24,7 @@ import { useShortcuts } from './hooks/useShortcuts'
 import { useFolderDrop } from './hooks/useFolderDrop'
 import { usePresence } from './hooks/usePresence'
 import { shortcutHint } from './commands/registry'
+import { repoDisplayName } from './types/ipc'
 import { Button, IconButton, Panel, Segmented } from './components/common'
 
 function Welcome(): React.ReactElement {
@@ -98,7 +99,7 @@ function MainLayout(): React.ReactElement {
       <div className="app-main">
         {activeRepo ? (
           <>
-            <Toolbar repoName={activeRepo.name} />
+            <Toolbar repoName={repoDisplayName(activeRepo)} />
             <div className="view-stage">
             {mainView === 'changes' ? (
               <Workspace

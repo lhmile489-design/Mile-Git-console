@@ -17,5 +17,11 @@ export const touchRepo = (id: number): Promise<null> =>
 export const relocateRepo = (id: number, path: string): Promise<RepoItem> =>
   invoke('repo:relocate', { id, path })
 
+// 别名 / 备注 / 所属工作区；没传的字段保持不变，传 null 表示清空
+export const updateRepoMeta = (
+  id: number,
+  meta: { alias?: string | null; note?: string | null; workspaceId?: number | null }
+): Promise<RepoItem> => invoke('repo:updateMeta', { id, ...meta })
+
 export const openFolderDialog = (): Promise<{ path: string } | null> =>
   invoke('dialog:open-folder')

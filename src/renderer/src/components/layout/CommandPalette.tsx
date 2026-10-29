@@ -5,6 +5,7 @@ import { Folder, GitBranch, Search, SquareTerminal } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { COMMANDS, formatShortcut } from '../../commands/registry'
 import { SelectionIndicator } from '../common'
+import { repoDisplayName } from '../../types/ipc'
 import { usePresence, type PresenceState } from '../../hooks/usePresence'
 
 interface PaletteItem {
@@ -41,7 +42,7 @@ function useItems(): PaletteItem[] {
       items.push({
         id: `repo:${r.id}`,
         group: '仓库',
-        label: `切换到仓库：${r.name}`,
+        label: `切换到仓库：${repoDisplayName(r)}`,
         hint: r.path,
         icon: <Folder size={16} />,
         run: () => void useAppStore.getState().selectRepo(r.id)

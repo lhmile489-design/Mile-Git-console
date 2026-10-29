@@ -17,8 +17,26 @@ export interface RepoItem {
   path: string
   addedAt: string
   lastOpenedAt: string
+  // 用户自定义别名与备注；别名为空时界面显示目录名
+  alias: string | null
+  note: string | null
+  // 所属工作区；null 表示未分组
+  workspaceId: number | null
   // 仓库目录被移动或删除（repo:list 时实时检查，不存库）
   missing?: boolean
+}
+
+// 工作区：用来把仓库归类的分组
+export interface WorkspaceItem {
+  id: number
+  name: string
+  collapsed: boolean
+  sortOrder: number
+}
+
+// 界面上显示的仓库名：别名优先，没有别名用目录名
+export function repoDisplayName(repo: Pick<RepoItem, 'name' | 'alias'>): string {
+  return repo.alias?.trim() || repo.name
 }
 
 // ---- Git 工作区 ----

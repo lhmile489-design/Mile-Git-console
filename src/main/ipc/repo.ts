@@ -18,7 +18,8 @@ import {
   removeRepo,
   touchRepo,
   getRepoByPath,
-  relocateRepo
+  relocateRepo,
+  updateRepoMeta
 } from '../storage/db'
 import { isGitRepo } from '../git'
 
@@ -94,6 +95,39 @@ export function registerRepoIpc(): void {
         return ok(updated)
       } catch (err) {
         return fail(IPC_STORAGE_FAILED, String(err))
+      }
+    }
+  )
+
+  // 别名 / 备注 / 所属工作区；payload 里没出现的字段保持不变，传 null 表示清空
+  ipcMain.handle(
+    'repo:updateMeta',
+    async (
+      _e,
+      payload: {
+        id: number
+        alias?: string | null
+        note?: string | null
+        workspaceId?: number | null
+      }
+    ): Promise<IpcResponse<RepoItem>> => {
+      try {
+        if (typeof payload?.id !== 'number') return fail(IPC_BAD_PAYLOAD, '缺少仓库 id')
+        const isText = (v: unknown): boolean => v === null || typeof v === 'string'
+        if ('alias' in payload && !isText(payload.alias)) return fail(IPC_BAD_PAYLOAD, '别名格式错误')
+        if ('note' in payload && !isText(payload.note)) return fail(IPC_BAD_PAYLOAD, '备注格式错误')
+        if (
+          'workspaceId' in payload &&
+          payload.workspaceId !== null &&
+          typeof payload.workspaceId !== 'number'
+        ) {
+          return fail(IPC_BAD_PAYLOAD, '工作区 id 格式错误')
+        }
+        const { id, ...meta } = payload
+        const updated = updateRepoMeta(id, meta)
+        return updated ? ok(updated) : fail(IPC_BAD_PAYLOAD, '仓库不存在')
+      } catch (err) {
+        return fail(IPC_BAD_PAYLOAD, err instanceof Error ? err.message : String(err))
       }
     }
   )
