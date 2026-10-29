@@ -1,6 +1,7 @@
 // 窗口控制 IPC（自定义标题栏按钮使用）
 import { ipcMain, BrowserWindow, app } from 'electron'
 import { ok, fail, IPC_UNKNOWN, type IpcResponse } from '../types/ipc'
+import { applyWindowMaterial } from '../windowMaterial'
 
 export function registerWindowIpc(): void {
   ipcMain.handle('window:minimize', async (e): Promise<IpcResponse<null>> => {
@@ -48,6 +49,20 @@ export function registerWindowIpc(): void {
       return fail(IPC_UNKNOWN, String(err))
     }
   })
+
+  // 窗口级材质：渲染进程启动时与切换「减少视觉效果」时调用；返回是否实际生效
+  ipcMain.handle(
+    'window:material',
+    async (e, payload: { enabled?: boolean }): Promise<IpcResponse<{ active: boolean }>> => {
+      try {
+        const win = BrowserWindow.fromWebContents(e.sender)
+        if (!win) return ok({ active: false })
+        return ok({ active: applyWindowMaterial(win, payload?.enabled === true) })
+      } catch (err) {
+        return fail(IPC_UNKNOWN, String(err))
+      }
+    }
+  )
 
   ipcMain.handle('window:show', async (e): Promise<IpcResponse<null>> => {
     try {

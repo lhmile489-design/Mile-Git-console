@@ -62,6 +62,8 @@ export interface DiffResult {
   filePath: string
   hunks: DiffHunk[]
   isBinary: boolean
+  // 文件或 diff 超过显示上限时为 true，hunks 为空，界面提示用外部工具查看
+  tooLarge?: boolean
 }
 
 // ---- 分支管理 ----
@@ -115,6 +117,7 @@ export const IPC_NOT_A_REPO = 1003
 export const IPC_REMOTE_FAILED = 1004
 export const IPC_MERGE_CONFLICT = 1005
 export const IPC_CANCELLED = 1006
+export const IPC_REMOTE_BUSY = 1007 // 该仓库已有远端操作正在进行
 export const IPC_STORAGE_FAILED = 2001
 export const IPC_BAD_PAYLOAD = 2002
 export const IPC_UNKNOWN = 9001

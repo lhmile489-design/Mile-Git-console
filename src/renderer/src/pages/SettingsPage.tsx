@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { ArrowLeft, ExternalLink, Monitor, Moon, Sun } from 'lucide-react'
 import { useAppStore } from '../store/appStore'
 import { Button, IconButton, Panel } from '../components/common'
+import { syncWindowMaterial } from '../utils/windowMaterial'
 
 type ThemeValue = 'light' | 'dark' | 'system'
 
@@ -76,6 +77,7 @@ function SettingsPage(): React.ReactElement {
     if (value) document.documentElement.setAttribute('data-reduce-effects', '')
     else document.documentElement.removeAttribute('data-reduce-effects')
     void window.electronAPI.invoke('settings:set', { key: 'ui.reduceEffects', value })
+    void syncWindowMaterial()
   }
 
   const handleOpenGitHub = (): void => {
@@ -147,7 +149,7 @@ function SettingsPage(): React.ReactElement {
             </div>
             <div className="settings-row">
               <dt>版本</dt>
-              <dd>2.1.0</dd>
+              <dd>2.2.0</dd>
             </div>
             <div className="settings-row">
               <dt>源代码</dt>

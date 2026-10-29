@@ -3,11 +3,14 @@ import ReactDOM from 'react-dom/client'
 import { I18nProvider } from 'react-aria-components'
 import App from './App'
 import { getSetting, getSettings } from './api/settings'
-// Nunito 本地打包（离线可用），只引入 latin 子集的 4 个字重（中文走系统回退）
-import '@fontsource/nunito/latin-400.css'
-import '@fontsource/nunito/latin-600.css'
-import '@fontsource/nunito/latin-700.css'
-import '@fontsource/nunito/latin-800.css'
+import { syncWindowMaterial } from './utils/windowMaterial'
+// 微交互主题字体本地打包（CSP 禁止外链，离线可用）：Inter 正文 + Manrope 标题，只引入 latin 子集（中文走系统回退）
+import '@fontsource/inter/latin-400.css'
+import '@fontsource/inter/latin-500.css'
+import '@fontsource/inter/latin-600.css'
+import '@fontsource/manrope/latin-600.css'
+import '@fontsource/manrope/latin-700.css'
+import '@fontsource/manrope/latin-800.css'
 import './styles/tokens.css'
 import './styles/global.css'
 import './styles/ui.css'
@@ -42,6 +45,11 @@ async function applyReduceEffects(): Promise<void> {
 
 async function bootstrap(): Promise<void> {
   await Promise.all([applySavedTheme(), applyReduceEffects()])
+  // 材质依赖「减少视觉效果」的结果，放在它之后；系统「减少透明度」变化时重新判断
+  void syncWindowMaterial()
+  window
+    .matchMedia('(prefers-reduced-transparency: reduce)')
+    .addEventListener('change', () => void syncWindowMaterial())
 
   ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>

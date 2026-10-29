@@ -34,7 +34,53 @@ export interface GitRunOptions {
   onProgress?: (e: SimpleGitProgressEvent) => void
 }
 
+// ---------------------------------------------------------------- 入参校验
+// 仓库闸门：只允许对已登记的仓库执行 git 命令。由主进程入口注入（查 SQLite），
+// 本模块不直接依赖存储层，纯函数可以脱离 electron 单测
+let repoGuard: (repoPath: string) => boolean = () => true
+
+export function setRepoGuard(guard: (repoPath: string) => boolean): void {
+  repoGuard = guard
+}
+
+// 分支 / ref 名：拒绝以 - 开头（否则会被 git 当成选项，如 --output=），
+// 并按 git check-ref-format 的主要规则拦截非法字符
+export function assertRefName(name: string, label = '分支名'): void {
+  if (
+    typeof name !== 'string' ||
+    name.length === 0 ||
+    name.length > 255 ||
+    name.startsWith('-') ||
+    name.startsWith('/') ||
+    name.endsWith('/') ||
+    name.endsWith('.') ||
+    name.endsWith('.lock') ||
+    name.includes('..') ||
+    name.includes('@{') ||
+    // eslint-disable-next-line no-control-regex
+    /[\x00-\x20\x7f~^:?*[\\]/.test(name)
+  ) {
+    throw new GitError(`${label}不合法：${String(name)}`, 'git')
+  }
+}
+
+export function assertCommitHash(hash: string): void {
+  if (typeof hash !== 'string' || !/^[0-9a-fA-F]{4,64}$/.test(hash)) {
+    throw new GitError(`提交哈希不合法：${String(hash)}`, 'git')
+  }
+}
+
+// 远端名：字母数字与 . _ -，且不能以 - 开头
+export function assertRemoteName(name: string): void {
+  if (typeof name !== 'string' || !/^[A-Za-z0-9._][A-Za-z0-9._-]*$/.test(name)) {
+    throw new GitError(`远端名不合法：${String(name)}`, 'git')
+  }
+}
+
 function git(repoPath: string, run: GitRunOptions = {}): SimpleGit {
+  if (typeof repoPath !== 'string' || !repoGuard(repoPath)) {
+    throw new GitError(`仓库未登记，拒绝操作：${String(repoPath)}`, 'git')
+  }
   // 过滤 Electron/shell 环境中会干扰 git 子进程的变量：
   // - GIT_EDITOR / EDITOR / VISUAL：git 需要编辑器时会尝试执行，值无效会报 "not permitted"
   // - GIT_SSH / GIT_SSH_COMMAND：simple-git 安全检查会拦截
@@ -187,7 +233,7 @@ export async function discardFiles(
       }
     }
 
-    // 已跟踪文件用 checkout 还原；未跟踪文件直接删除
+    // 已跟踪文件用 checkout 还原；未跟踪文件（含未跟踪目录 dir/）直接删除
     const status = await git(repoPath).status()
     const untracked = new Set(status.not_added)
     const tracked = filePaths.filter((p) => !untracked.has(p))
@@ -197,7 +243,8 @@ export async function discardFiles(
     }
     for (const p of toDelete) {
       const abs = path.resolve(repoPath, p)
-      if (fs.existsSync(abs)) fs.rmSync(abs, { force: true })
+      if (abs === resolvedRoot) continue // 永远不删仓库根目录
+      if (fs.existsSync(abs)) fs.rmSync(abs, { force: true, recursive: true })
     }
   })
 }
@@ -228,11 +275,25 @@ export async function getDiff(
     // 未跟踪文件：构造全量 added 的 diff
     const status = await git(repoPath).status()
     if (status.not_added.includes(filePath)) {
-      const abs = path.join(repoPath, filePath)
-      const content = fs.existsSync(abs)
-        ? fs.readFileSync(abs, 'utf-8')
-        : ''
-      const lines = content.split('\n')
+      const resolvedRoot = path.resolve(repoPath)
+      const abs = path.resolve(repoPath, filePath)
+      if (!abs.startsWith(resolvedRoot + path.sep)) {
+        throw new GitError(`路径穿越检测，拒绝操作：${filePath}`, 'git')
+      }
+      if (!fs.existsSync(abs)) return { filePath, hunks: [], isBinary: false }
+      const stat = fs.statSync(abs)
+      // 未跟踪目录（status 里显示为 dir/）：没有单一文件内容可展示
+      if (stat.isDirectory()) return { filePath, hunks: [], isBinary: false }
+      if (stat.size > MAX_DIFF_BYTES) {
+        return { filePath, hunks: [], isBinary: false, tooLarge: true }
+      }
+      const buf = fs.readFileSync(abs)
+      // 前 8KB 含 NUL 字节按二进制处理（与 git 的判定方式一致）
+      if (buf.subarray(0, 8000).includes(0)) return { filePath, hunks: [], isBinary: true }
+      const lines = buf.toString('utf-8').split('\n')
+      if (lines.length > MAX_DIFF_LINES) {
+        return { filePath, hunks: [], isBinary: false, tooLarge: true }
+      }
       return {
         filePath,
         isBinary: false,
@@ -257,9 +318,16 @@ export async function getDiff(
   })
 }
 
+// diff 显示上限：超过即不解析，避免渲染几十万行卡死界面
+const MAX_DIFF_BYTES = 1024 * 1024
+const MAX_DIFF_LINES = 5000
+
 export function parseDiff(filePath: string, raw: string): DiffResult {
   if (/Binary files|GIT binary patch/.test(raw)) {
     return { filePath, hunks: [], isBinary: true }
+  }
+  if (raw.length > MAX_DIFF_BYTES) {
+    return { filePath, hunks: [], isBinary: false, tooLarge: true }
   }
   const hunks: DiffHunk[] = []
   let current: DiffHunk | null = null
@@ -303,6 +371,7 @@ export async function getCommitFileDiff(
   filePath: string
 ): Promise<DiffResult> {
   return wrap(async () => {
+    assertCommitHash(hash)
     const raw = await git(repoPath).show([
       '--format=',
       '--patch',
@@ -335,9 +404,12 @@ export async function listBranches(repoPath: string): Promise<BranchInfo[]> {
     for (const line of raw.split('\n')) {
       if (!line.trim()) continue
       const [name, hash, date, subject, fullRef] = line.split('\x1f')
+      if (!fullRef) continue
       const isRemote = fullRef.startsWith('refs/remotes/')
+      // refs/remotes/<remote>/HEAD 是指向默认分支的符号引用，短名只剩 <remote>，不作为分支展示
+      if (isRemote && fullRef.endsWith('/HEAD')) continue
       branches.push({
-        name: isRemote ? name : name,
+        name,
         isCurrent: !isRemote && name === status.current,
         isRemote,
         lastCommitHash: hash ?? '',
@@ -361,7 +433,9 @@ export async function createBranch(
   fromBranch?: string
 ): Promise<void> {
   return wrap(async () => {
+    assertRefName(branchName)
     if (fromBranch) {
+      assertRefName(fromBranch, '起点分支')
       await git(repoPath).checkout(['-b', branchName, fromBranch])
     } else {
       await git(repoPath).checkoutLocalBranch(branchName)
@@ -374,6 +448,7 @@ export async function switchBranch(
   branchName: string
 ): Promise<void> {
   return wrap(async () => {
+    assertRefName(branchName)
     try {
       await git(repoPath).checkout(branchName)
     } catch (err) {
@@ -393,6 +468,7 @@ export async function mergeBranch(
   repoPath: string,
   sourceBranch: string
 ): Promise<{ hasConflict: boolean }> {
+  assertRefName(sourceBranch, '来源分支')
   try {
     await git(repoPath).merge([sourceBranch])
     return { hasConflict: false }
@@ -409,11 +485,10 @@ export async function deleteBranch(
   branchName: string,
   force = false
 ): Promise<void> {
-  return wrap(() =>
-    git(repoPath)
-      .branch([force ? '-D' : '-d', branchName])
-      .then(() => undefined)
-  )
+  return wrap(async () => {
+    assertRefName(branchName)
+    await git(repoPath).branch([force ? '-D' : '-d', branchName])
+  })
 }
 
 // ---------------------------------------------------------------- 远端
@@ -455,12 +530,14 @@ export async function pushRemote(
   run: GitRunOptions = {}
 ): Promise<void> {
   return wrap(async () => {
+    const remote = options.remote ?? 'origin'
+    assertRemoteName(remote)
     const status = await git(repoPath).status()
     const args: string[] = []
     if (options.force) args.push('--force')
     // 无上游分支时自动 -u（有远端但未 track 也覆盖）
     if (options.setUpstream || !status.tracking) {
-      args.push('-u', options.remote ?? 'origin', status.current ?? 'HEAD')
+      args.push('-u', remote, status.current ?? 'HEAD')
     }
     try {
       await git(repoPath, run).push(args)
@@ -555,8 +632,12 @@ export async function getCommitLog(
   } = {}
 ): Promise<CommitLogResult> {
   return wrap(async () => {
-    const limit = options.limit ?? 50
-    const offset = options.offset ?? 0
+    // limit / offset 来自渲染层，取非负整数并限制上限，避免拼进参数时混入其他内容
+    const toInt = (v: unknown, def: number, max: number): number =>
+      typeof v === 'number' && Number.isInteger(v) && v >= 0 ? Math.min(v, max) : def
+    const limit = toInt(options.limit, 50, 500)
+    const offset = toInt(options.offset, 0, Number.MAX_SAFE_INTEGER)
+    if (options.branch !== undefined) assertRefName(options.branch)
     const args = [
       'log',
       // 注意：分隔符放格式前缀。git 的 --numstat 输出在 format 块之后，
@@ -602,6 +683,7 @@ export async function getCommitDetail(
   hash: string
 ): Promise<CommitDetail> {
   return wrap(async () => {
+    assertCommitHash(hash)
     const metaRaw = await git(repoPath).raw([
       'show',
       `--format=${LOG_FORMAT}`,

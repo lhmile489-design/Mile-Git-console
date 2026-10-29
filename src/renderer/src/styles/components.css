@@ -6,7 +6,7 @@
 
 /* ---------- 通用 ---------- */
 .spin {
-  animation: spin 1.5s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 @keyframes spin {
   to {
@@ -57,8 +57,8 @@
   display: grid;
   place-items: center;
   border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise);
 }
 .titlebar-app-icon {
   width: 18px;
@@ -323,7 +323,7 @@
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
-  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise-hover);
   pointer-events: auto;
   animation: toast-in var(--duration-base) var(--ease-out-back);
 }
@@ -358,7 +358,7 @@
   height: 28px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-highlight);
+  box-shadow: none;
 }
 .toast-error .toast-icon {
   background: var(--color-danger-bg);
@@ -400,7 +400,7 @@
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
-  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise-hover);
   z-index: 60;
   transform-origin: top center;
   animation: popover-in var(--duration-base) var(--ease-out-back);
@@ -506,8 +506,8 @@
   padding: 0 var(--space-3);
   border: 1px solid var(--color-border-highlight);
   border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise);
   color: var(--color-text-primary);
   font-family: var(--font-family-ui);
   font-size: var(--text-sm);
@@ -519,7 +519,7 @@
 }
 .branch-chip:hover {
   transform: translateY(-1px);
-  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise-hover);
 }
 .branch-chip:active {
   transform: translateY(0);
@@ -559,8 +559,8 @@
   padding: 0 var(--space-1);
   border: 1px solid var(--color-border-highlight);
   border-radius: var(--radius-md);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise);
 }
 .action-group .ui-btn {
   height: 26px;
@@ -702,7 +702,7 @@
 .file-group-action-primary {
   background: var(--color-primary-soft);
   color: var(--color-primary-hover);
-  box-shadow: var(--shadow-highlight);
+  box-shadow: none;
 }
 .file-list {
   display: flex;
@@ -756,7 +756,7 @@
   font-family: var(--font-family-mono);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-heavy);
-  box-shadow: var(--shadow-highlight);
+  box-shadow: none;
 }
 .status-added {
   color: var(--color-git-added);
@@ -1098,7 +1098,7 @@
   color: var(--color-git-untracked);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-heavy);
-  box-shadow: var(--shadow-highlight);
+  box-shadow: none;
 }
 .commit-list-loading {
   display: flex;
@@ -1131,7 +1131,7 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-bg-surface);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise);
 }
 .commit-detail-message {
   font-size: var(--text-base);
@@ -1176,11 +1176,11 @@
   height: 28px;
   flex-shrink: 0;
   border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
+  background: var(--color-primary);
   color: var(--color-text-on-primary);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-heavy);
-  box-shadow: var(--shadow-highlight);
+  box-shadow: none;
 }
 .commit-detail-stats {
   display: flex;
@@ -1282,8 +1282,8 @@
   height: 64px;
   border: 1px solid var(--color-border-highlight);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise);
   color: var(--color-primary);
 }
 .welcome-title {
@@ -1375,7 +1375,7 @@
 .theme-option.active {
   border-color: var(--color-primary);
   background: var(--color-bg-surface);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise);
   color: var(--color-primary);
 }
 .theme-option-label {
@@ -1514,8 +1514,8 @@
   padding: var(--space-8) var(--space-12);
   border: 2px dashed var(--color-primary);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise-hover);
   color: var(--color-primary);
 }
 .drop-overlay-title {
@@ -1555,7 +1555,7 @@
   background: var(--glass-bg);
   -webkit-backdrop-filter: var(--glass-filter);
   backdrop-filter: var(--glass-filter);
-  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise-hover);
   overflow: hidden;
   animation: palette-in var(--duration-base) var(--ease-out-back);
 }
@@ -1749,7 +1749,8 @@
 .repo-item:nth-of-type(-n + 8),
 .file-row:nth-of-type(-n + 8),
 .commit-row:nth-of-type(-n + 8) {
-  animation: ui-list-in var(--duration-base) var(--ease-emphasized) both;
+  /* backwards：延迟期间保持起始态，结束后不再占用 transform，否则行的按压缩放失效 */
+  animation: ui-list-in var(--duration-base) var(--ease-emphasized) backwards;
 }
 .repo-item:nth-of-type(2),
 .file-row:nth-of-type(2),
@@ -1924,4 +1925,96 @@
 ::view-transition-group(*) {
   animation-duration: var(--duration-base);
   animation-timing-function: var(--ease-emphasized);
+}
+
+/* ============================================================
+   微交互主题层（来源模板 16-micro-interactions.html）
+   标题用 Manrope；行与药丸按下回弹；卡片悬停轻浮；徽标弹出
+   时长统一 70ms（位移）/ 90ms（颜色），回弹曲线 --ease-pop
+   ============================================================ */
+.titlebar-title,
+.sidebar-title,
+.toolbar-repo-name,
+.welcome-title,
+.settings-title,
+.settings-card-title,
+.drop-overlay-title,
+.ui-dialog-title {
+  font-family: var(--font-family-display);
+  font-weight: var(--font-weight-display);
+  letter-spacing: -0.01em;
+}
+.sidebar-title,
+.settings-card-title {
+  font-weight: var(--font-weight-bold);
+}
+
+/* 列表行：悬停淡蓝底，按下缩到 98%，松开回弹 */
+.repo-item,
+.file-row,
+.commit-row,
+.palette-item {
+  transition:
+    background-color var(--duration-fast) var(--ease-soft),
+    transform var(--duration-instant) var(--ease-pop);
+}
+.repo-item:active,
+.file-row:active,
+.commit-row:active,
+.palette-item:active {
+  transform: scale(0.98);
+}
+
+/* 分支药丸：模板按钮手感，悬停描边转蓝、按下缩放 */
+.branch-chip {
+  transition:
+    transform var(--duration-instant) var(--ease-soft),
+    box-shadow var(--duration-fast) var(--ease-soft),
+    border-color var(--duration-fast) var(--ease-soft);
+}
+.branch-chip:hover {
+  transform: translateY(var(--lift-hover));
+  border-color: var(--color-primary-ring);
+}
+.branch-chip:active {
+  transform: scale(var(--press-scale));
+  box-shadow: var(--shadow-raise);
+}
+
+/* 欢迎页、设置页卡片：悬停上浮 3px、阴影加深、描边转淡蓝 */
+.welcome-card.ui-panel,
+.settings-card.ui-panel {
+  transition:
+    transform var(--duration-fast) var(--ease-soft),
+    box-shadow var(--duration-fast) var(--ease-soft),
+    border-color var(--duration-fast) var(--ease-soft);
+}
+.settings-card.ui-panel:hover {
+  transform: translateY(var(--lift-card));
+  box-shadow: var(--shadow-raise-hover);
+  border-color: var(--color-primary-ring);
+}
+.welcome-mark {
+  transition: transform var(--duration-instant) var(--ease-pop);
+}
+.welcome-card:hover .welcome-mark {
+  transform: scale(1.08);
+}
+
+/* 计数徽标：数字变化时（组件以 key 重挂）弹出一次 */
+.count-badge {
+  animation: mi-pop var(--duration-slow) var(--ease-pop);
+}
+@keyframes mi-pop {
+  from {
+    transform: scale(0.4);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* 通用加载转圈：模板 0.7s 一圈 */
+.spin {
+  animation-duration: 0.7s;
 }

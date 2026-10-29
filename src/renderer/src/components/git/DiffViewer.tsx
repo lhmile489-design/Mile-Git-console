@@ -95,6 +95,14 @@ function DiffViewer({ mode = 'worktree' }: DiffViewerProps): React.ReactElement 
       <span className="empty-state-title">二进制文件</span>
       <span>无法以文本形式显示差异</span>
     </div>
+  ) : diff.tooLarge ? (
+    <div className="empty-state">
+      <span className="empty-state-icon" aria-hidden="true">
+        <FileText size={20} />
+      </span>
+      <span className="empty-state-title">文件过大</span>
+      <span>超过 1 MB 或 5000 行，为避免卡顿不在此显示，请用编辑器查看</span>
+    </div>
   ) : diff.hunks.length === 0 ? (
     <div className="empty-state">
       <span className="empty-state-title">没有可显示的变更</span>

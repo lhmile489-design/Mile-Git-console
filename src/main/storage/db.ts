@@ -45,12 +45,16 @@ function runMigrations(database: Database.Database): void {
     if (alreadyApplied) continue
 
     const sql = fs.readFileSync(path.join(migrationDir, file), 'utf-8')
-    database.exec(sql)
-    database
-      .prepare(
-        'INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)'
-      )
-      .run(version, file, new Date().toISOString())
+    // 脚本与版本记录放在同一事务：任一步失败整体回滚，不会停在半迁移状态
+    const apply = database.transaction(() => {
+      database.exec(sql)
+      database
+        .prepare(
+          'INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)'
+        )
+        .run(version, file, new Date().toISOString())
+    })
+    apply()
     console.log(`[DB] Applied migration: ${file}`)
   }
 }

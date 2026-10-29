@@ -6,8 +6,8 @@ import {
   ok,
   fail,
   IPC_BAD_PAYLOAD,
-  IPC_UNKNOWN,
   IPC_CANCELLED,
+  IPC_REMOTE_BUSY,
   type IpcResponse
 } from '../types/ipc'
 import { fetchRemote, pullRemote, pushRemote, GitError } from '../git'
@@ -41,7 +41,7 @@ async function runRemote<T>(
   exec: (run: { signal: AbortSignal; onProgress: (e: SimpleGitProgressEvent) => void }) => Promise<T>
 ): Promise<IpcResponse<T>> {
   if (running.has(repoPath)) {
-    return fail(IPC_UNKNOWN, '该仓库已有远端操作正在进行')
+    return fail(IPC_REMOTE_BUSY, '该仓库已有远端操作正在进行')
   }
   const controller = new AbortController()
   running.set(repoPath, controller)

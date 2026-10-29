@@ -17,20 +17,20 @@
   border-radius: var(--radius-md);
   font-family: var(--font-family-ui);
   font-size: var(--text-sm);
-  font-weight: var(--font-weight-heavy);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
   outline: none;
-  /* 主按钮的高光扫过需要裁切在按钮内 */
   position: relative;
-  overflow: hidden;
   isolation: isolate;
+  /* 微交互：位移 70ms，颜色 / 阴影 / 边框 90ms */
   transition:
-    transform var(--duration-base) var(--ease-out-back),
-    box-shadow var(--duration-base) var(--ease-emphasized),
-    background-color var(--duration-fast) var(--ease-emphasized),
-    color var(--duration-fast) var(--ease-emphasized);
+    transform var(--duration-instant) var(--ease-soft),
+    box-shadow var(--duration-fast) var(--ease-soft),
+    background-color var(--duration-fast) var(--ease-soft),
+    border-color var(--duration-fast) var(--ease-soft),
+    color var(--duration-fast) var(--ease-soft);
 }
 .ui-btn-sm {
   height: 28px;
@@ -38,7 +38,7 @@
   font-size: var(--text-xs);
 }
 .ui-btn[data-focus-visible] {
-  outline: 2px solid var(--color-primary);
+  outline: var(--focus-ring-width) solid var(--color-primary);
   outline-offset: 2px;
 }
 .ui-btn[data-disabled] {
@@ -50,61 +50,37 @@
   transform: none;
 }
 
-/* 主按钮：竖向渐变 + 主色阴影 + 高光 */
+/* 主按钮：纯色交互蓝 + 蓝色投影；悬停加深并上浮 1px */
 .ui-btn-primary {
-  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
+  background: var(--color-primary);
   color: var(--color-text-on-primary);
-  box-shadow: var(--shadow-primary), var(--shadow-highlight);
+  box-shadow: var(--shadow-primary);
 }
 .ui-btn-primary[data-hovered]:not([data-disabled]) {
-  transform: translateY(-1px);
-}
-/* 主按钮悬停：一道高光从左向右扫过一次（只动 transform） */
-.ui-btn-primary::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    100deg,
-    transparent 30%,
-    color-mix(in srgb, var(--color-border-highlight) 35%, transparent) 50%,
-    transparent 70%
-  );
-  transform: translateX(-100%);
-  pointer-events: none;
-}
-.ui-btn-primary[data-hovered]:not([data-disabled])::after {
-  animation: ui-sheen var(--duration-slow) var(--ease-emphasized);
-}
-@keyframes ui-sheen {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(100%);
-  }
+  background: var(--color-primary-hover);
+  transform: translateY(var(--lift-hover));
+  box-shadow: var(--shadow-primary-hover);
 }
 
-/* 次要按钮 */
+/* 次要按钮：白底细描边，悬停时描边转蓝 */
 .ui-btn-secondary {
-  background: var(--color-primary-soft);
-  color: var(--color-primary-hover);
-  border-color: var(--color-border-highlight);
-  box-shadow: var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border-highlight);
+  box-shadow: var(--shadow-raise);
 }
 .ui-btn-secondary[data-hovered]:not([data-disabled]) {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  border-color: var(--color-primary-ring);
+  transform: translateY(var(--lift-hover));
 }
 
-/* 幽灵按钮 */
+/* 幽灵按钮：悬停只铺一层蓝色淡底 */
 .ui-btn-ghost {
   background: transparent;
   color: var(--color-primary);
 }
 .ui-btn-ghost[data-hovered]:not([data-disabled]) {
-  background: var(--color-bg-hover);
+  background: var(--color-primary-tint);
 }
 .ui-btn-ghost[data-disabled] {
   background: transparent;
@@ -114,25 +90,26 @@
 .ui-btn-danger {
   background: var(--color-danger);
   color: var(--color-text-on-primary);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise);
 }
 .ui-btn-danger[data-hovered]:not([data-disabled]) {
-  transform: translateY(-1px);
+  transform: translateY(var(--lift-hover));
+  box-shadow: var(--shadow-raise-hover);
 }
 
-/* 按下：回到原位并轻微缩小，换成凹陷阴影；按下反馈用最短时长 */
+/* 按下：缩到 96%（模板 .btn:active），按下反馈只用 70ms */
 .ui-btn[data-pressed]:not([data-disabled]) {
-  transform: translateY(0) scale(0.97);
-  box-shadow: var(--shadow-press);
+  transform: scale(var(--press-scale));
   transition-duration: var(--duration-instant);
 }
-/* 成功态：短暂停留在主色渐变 + 对勾，由组件控制停留时长 */
+/* 成功态：变成绿色并弹出对勾（模板 .btn-submit.is-success），由组件控制停留时长 */
 .ui-btn.is-success {
-  background: linear-gradient(180deg, var(--color-git-added), var(--color-git-added));
+  background: var(--color-feedback-success);
   color: var(--color-text-on-primary);
+  box-shadow: 0 6px 16px var(--color-feedback-success-glow);
 }
 .ui-btn.is-success svg {
-  animation: ui-pop-check var(--duration-base) var(--ease-out-back);
+  animation: ui-pop-check var(--duration-slow) var(--ease-pop);
 }
 @keyframes ui-pop-check {
   from {
@@ -161,10 +138,10 @@
   outline: none;
   flex-shrink: 0;
   transition:
-    transform var(--duration-base) var(--ease-out-back),
-    background-color var(--duration-fast) var(--ease-emphasized),
-    color var(--duration-fast) var(--ease-emphasized),
-    box-shadow var(--duration-base) var(--ease-emphasized);
+    transform var(--duration-instant) var(--ease-soft),
+    background-color var(--duration-fast) var(--ease-soft),
+    color var(--duration-fast) var(--ease-soft),
+    box-shadow var(--duration-fast) var(--ease-soft);
 }
 .ui-icon-btn-sm {
   width: 24px;
@@ -179,11 +156,11 @@
   height: 100%;
 }
 .ui-icon-btn-inner svg {
-  transition: transform var(--duration-base) var(--ease-out-back);
+  transition: transform var(--duration-fast) var(--ease-pop);
 }
-/* 悬停时图标轻微上浮 */
+/* 悬停时图标轻转 8° 并上浮（模板 .icon-btn:hover） */
 .ui-icon-btn[data-hovered]:not([data-disabled]) .ui-icon-btn-inner svg {
-  transform: translateY(-1px);
+  transform: rotate(8deg) translateY(var(--lift-hover));
 }
 /* 刷新按钮点击后整圈旋转一次（组件切换 key 重新触发） */
 .spin-once {
@@ -198,21 +175,20 @@
   }
 }
 .ui-icon-btn[data-hovered]:not([data-disabled]) {
-  background: var(--color-bg-surface);
-  color: var(--color-text-primary);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  background: var(--color-primary-tint);
+  color: var(--color-primary);
 }
 .ui-icon-btn.is-active {
   background: var(--color-bg-selected);
   color: var(--color-primary);
 }
+/* 按下缩到 90%（模板 .icon-btn:active） */
 .ui-icon-btn[data-pressed]:not([data-disabled]) {
-  box-shadow: var(--shadow-press);
-  transform: scale(0.94);
+  transform: scale(var(--press-scale-icon));
   transition-duration: var(--duration-instant);
 }
 .ui-icon-btn[data-focus-visible] {
-  outline: 2px solid var(--color-primary);
+  outline: var(--focus-ring-width) solid var(--color-primary);
   outline-offset: 2px;
 }
 .ui-icon-btn[data-disabled] {
@@ -230,7 +206,7 @@
   padding: var(--space-1);
   border-radius: var(--radius-md);
   background: var(--color-bg-inset);
-  box-shadow: var(--shadow-press);
+  border: 1px solid var(--color-border-highlight);
 }
 .ui-segmented-thumb {
   position: absolute;
@@ -239,10 +215,10 @@
   left: var(--space-1);
   width: calc((100% - 2 * var(--space-1)) / var(--seg-count));
   border-radius: calc(var(--radius-md) - 2px);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-raise);
   transform: translateX(calc(var(--seg-index) * 100%));
-  transition: transform var(--duration-base) var(--ease-out-back);
+  transition: transform var(--duration-base) var(--ease-pop);
   pointer-events: none;
 }
 .ui-segmented-item {
@@ -259,11 +235,16 @@
   color: var(--color-text-secondary);
   font-family: var(--font-family-ui);
   font-size: var(--text-xs);
-  font-weight: var(--font-weight-heavy);
+  font-weight: var(--font-weight-bold);
   white-space: nowrap;
   cursor: pointer;
   outline: none;
-  transition: color var(--duration-base) var(--ease-emphasized);
+  transition:
+    color var(--duration-fast) var(--ease-soft),
+    transform var(--duration-instant) var(--ease-soft);
+}
+.ui-segmented-item[data-pressed] {
+  transform: scale(var(--press-scale));
 }
 .ui-segmented-item svg {
   flex-shrink: 0;
@@ -282,10 +263,10 @@
 
 /* ---------- 卡片 ---------- */
 .ui-panel {
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border-highlight);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  box-shadow: var(--shadow-raise);
   overflow: hidden;
 }
 
@@ -314,7 +295,7 @@
   outline: none;
 }
 .ui-modal[data-entering] {
-  animation: ui-pop-in var(--duration-base) var(--ease-out-back);
+  animation: ui-pop-in var(--duration-slow) var(--ease-pop);
 }
 .ui-modal[data-exiting] {
   animation: ui-pop-in var(--duration-fast) var(--ease-in-quick) reverse forwards;
@@ -323,8 +304,8 @@
   padding: var(--space-6);
   border: 1px solid var(--color-border-highlight);
   border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise-hover), var(--shadow-highlight);
+  background: var(--color-bg-surface);
+  box-shadow: var(--shadow-overlay);
   outline: none;
 }
 .ui-dialog-header {
@@ -342,12 +323,13 @@
   border-radius: var(--radius-md);
   background: var(--color-danger-bg);
   color: var(--color-danger);
-  box-shadow: var(--shadow-highlight);
   flex-shrink: 0;
+  animation: ui-pop-check var(--duration-slow) var(--ease-pop);
 }
 .ui-dialog-title {
+  font-family: var(--font-family-display);
   font-size: var(--text-base);
-  font-weight: var(--font-weight-heavy);
+  font-weight: var(--font-weight-display);
   line-height: var(--line-height-heading);
   color: var(--color-text-primary);
 }
@@ -437,27 +419,25 @@
   font-size: var(--text-sm);
   font-weight: var(--font-weight-body);
   color: var(--color-text-primary);
-  background-color: var(--color-bg-inset);
+  background-color: var(--color-bg-surface);
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-press);
   outline: none;
   user-select: text;
   transition:
-    border-color var(--transition-fast),
-    box-shadow var(--transition-fast);
+    border-color var(--duration-instant) var(--ease-soft),
+    box-shadow var(--duration-instant) var(--ease-soft);
 }
 .ui-input::placeholder {
   color: var(--color-text-muted);
 }
+/* 悬停描边转蓝（模板 .field input:hover） */
 .ui-input:hover {
-  border-color: var(--color-text-secondary);
+  border-color: var(--color-primary-ring);
 }
 .ui-input:focus {
   border-color: var(--color-primary);
-  box-shadow:
-    var(--shadow-press),
-    0 0 0 3px color-mix(in srgb, var(--color-primary) 25%, transparent);
+  box-shadow: 0 0 0 var(--focus-ring-width) var(--color-primary-tint);
 }
 textarea.ui-input {
   height: auto;
@@ -478,9 +458,8 @@ textarea.ui-input {
   background-color: var(--color-primary-soft);
   color: var(--color-primary-hover);
   font-size: var(--text-xs);
-  font-weight: var(--font-weight-heavy);
+  font-weight: var(--font-weight-bold);
   line-height: 1;
-  box-shadow: var(--shadow-highlight);
 }
 
 /* ---------- 复选框：凹陷方块，选中后主色填充 + 白色勾 ---------- */
@@ -494,12 +473,15 @@ textarea.ui-input {
   margin: 0;
   border: 1.5px solid var(--color-border-strong);
   border-radius: 5px;
-  background: var(--color-bg-inset);
-  box-shadow: var(--shadow-press);
+  background: var(--color-bg-surface);
   cursor: pointer;
   transition:
-    background-color var(--transition-fast),
-    border-color var(--transition-fast);
+    background-color var(--duration-fast) var(--ease-soft),
+    border-color var(--duration-fast) var(--ease-soft),
+    transform var(--duration-instant) var(--ease-soft);
+}
+.ui-checkbox:active {
+  transform: scale(var(--press-scale-icon));
 }
 .ui-checkbox::after {
   content: '';
@@ -508,21 +490,20 @@ textarea.ui-input {
   border-left: 2px solid var(--color-text-on-primary);
   border-bottom: 2px solid var(--color-text-on-primary);
   transform: translateY(-1px) rotate(-45deg) scale(0);
-  transition: transform var(--duration-base) var(--ease-out-back);
+  transition: transform var(--duration-slow) var(--ease-pop);
 }
 .ui-checkbox:hover {
-  border-color: var(--color-text-secondary);
+  border-color: var(--color-primary);
 }
 .ui-checkbox:checked {
   border-color: var(--color-primary);
-  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
-  box-shadow: var(--shadow-highlight);
+  background: var(--color-primary);
 }
 .ui-checkbox:checked::after {
   transform: translateY(-1px) rotate(-45deg) scale(1);
 }
 .ui-checkbox:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: var(--focus-ring-width) solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -532,15 +513,14 @@ textarea.ui-input {
   height: 48px;
   display: grid;
   place-items: center;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  border: 1px solid var(--color-border-highlight);
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
   color: var(--color-primary);
 }
 .empty-state-title {
+  font-family: var(--font-family-display);
   font-size: var(--text-sm);
-  font-weight: var(--font-weight-heavy);
+  font-weight: var(--font-weight-display);
   color: var(--color-text-primary);
 }
 .empty-state-text {
@@ -583,11 +563,11 @@ textarea.ui-input {
   height: 24px;
   margin: 0;
   border-radius: var(--radius-pill);
-  background: var(--color-bg-inset);
-  box-shadow: var(--shadow-press);
+  background: var(--color-switch-off);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-emphasized);
+  transition: background-color var(--duration-fast) var(--ease-soft);
 }
+/* 旋钮用回弹曲线滑过去，到位时有一次轻微过冲（模板 .switch-knob） */
 .ui-switch::after {
   content: '';
   position: absolute;
@@ -596,15 +576,19 @@ textarea.ui-input {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: linear-gradient(180deg, var(--color-bg-surface), var(--color-bg-surface-end));
-  box-shadow: var(--shadow-raise), var(--shadow-highlight);
-  transition: transform var(--duration-base) var(--ease-out-back);
+  background: var(--color-switch-knob);
+  box-shadow: var(--shadow-knob);
+  transition: transform var(--duration-fast) var(--ease-pop);
 }
 .ui-switch:checked {
-  background: linear-gradient(180deg, var(--color-primary-start), var(--color-primary));
+  background: var(--color-feedback-success);
 }
 .ui-switch:checked::after {
   transform: translateX(16px);
+}
+.ui-switch:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-primary);
+  outline-offset: 3px;
 }
 
 /* ---------- 滑动选中指示层（SelectionIndicator） ---------- */
@@ -620,5 +604,5 @@ textarea.ui-input {
   pointer-events: none;
 }
 .ui-selection-indicator.is-animated {
-  transition: transform var(--duration-base) var(--ease-emphasized);
+  transition: transform var(--duration-base) var(--ease-pop);
 }

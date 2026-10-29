@@ -12,7 +12,7 @@
 |---|---|
 | 应用名 | Mile Git Management |
 | 应用 ID | `com.mile.git-management` |
-| 版本 | `2.1.0` |
+| 版本 | `2.2.0` |
 | 入口（主进程） | `src/main/index.ts` |
 | 入口（渲染进程） | `src/renderer/src/main.tsx` |
 | Preload | `src/preload/index.ts` |
@@ -164,6 +164,8 @@ interface IpcResponse<T = unknown> {
 | 1003 | 不是有效 Git 仓库 |
 | 1004 | 远端连接失败（fetch/push/pull 网络错误） |
 | 1005 | 合并冲突（需用户手动解决） |
+| 1006 | 操作已被用户取消（远端操作） |
+| 1007 | 该仓库已有远端操作正在进行 |
 | 2001 | 本地存储读写失败 |
 | 2002 | 数据格式错误 |
 | 9001 | 未知错误 |

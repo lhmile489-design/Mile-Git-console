@@ -27,8 +27,7 @@ export function createTray(mainWindow: BrowserWindow): Tray {
       {
         label: '退出',
         click: () => {
-          // 先解绑 close 拦截，再 quit
-          mainWindow.removeAllListeners('close')
+          // before-quit 会置退出标记，close 拦截随之放行（见 appState.ts）
           app.quit()
         }
       }

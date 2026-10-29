@@ -34,3 +34,7 @@ yarn-error.log*
 
 # 测试工具临时文件
 .playwright-mcp/
+.tmp-*
+
+# TypeScript 增量构建缓存
+*.tsbuildinfo

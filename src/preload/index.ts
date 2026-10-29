@@ -1,5 +1,4 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
 
 // 统一响应类型
 export interface IpcResponse<T = unknown> {
@@ -51,6 +50,7 @@ const ALLOWED_INVOKE_CHANNELS: ReadonlySet<string> = new Set([
   'window:minimize',
   'window:maximize',
   'window:close',
+  'window:material',
   'shell:openExternal'
 ])
 
@@ -96,16 +96,14 @@ const api = {
 }
 
 // contextBridge 暴露（仅在 Electron 上下文中生效）
+// 只暴露 electronAPI：不再暴露 @electron-toolkit 的 electronAPI，它自带完整 ipcRenderer，会绕过上面的白名单
 if (process.contextIsolated) {
   try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('electronAPI', api)
   } catch (error) {
     console.error('contextBridge 暴露失败:', error)
   }
 } else {
-  // @ts-ignore（仅开发调试用）
-  window.electron = electronAPI
   // @ts-ignore（非隔离环境的开发调试回退）
   window.electronAPI = api
 }

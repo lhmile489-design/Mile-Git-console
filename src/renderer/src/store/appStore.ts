@@ -153,6 +153,11 @@ function activeRepoPath(state: AppState): string | null {
   return repo ? repo.path : null
 }
 
+// 异步结果回来时，发起请求的仓库是否仍是当前仓库；切换仓库后晚到的结果直接丢弃
+function stillOn(state: AppState, repoPath: string): boolean {
+  return activeRepoPath(state) === repoPath
+}
+
 export const useAppStore = create<AppState>()((set, get) => {
   // 内部工具：追加一条提示。与最近一条完全相同时不重复追加
   const pushToast = (kind: ToastKind, text: string, action?: ToastAction): void => {
@@ -336,6 +341,7 @@ export const useAppStore = create<AppState>()((set, get) => {
         : run
       await exec(async () => {
         const gitStatus = await gitApi.getGitStatus(repoPath)
+        if (!stillOn(get(), repoPath)) return
         // transition：暂存 / 取消暂存后让文件行平滑移到新分组
         if (opts?.transition) await withViewTransition(() => set({ gitStatus }), { kind: 'files' })
         else set({ gitStatus })
@@ -347,7 +353,14 @@ export const useAppStore = create<AppState>()((set, get) => {
           )
           if (stillExists) {
             const diff = await gitApi.getFileDiff(repoPath, sel.path, sel.staged)
-            set({ diff })
+            const cur = get().selectedFile
+            if (
+              stillOn(get(), repoPath) &&
+              cur?.path === sel.path &&
+              cur.staged === sel.staged
+            ) {
+              set({ diff })
+            }
           } else {
             set({ selectedFile: null, diff: null })
           }
@@ -361,7 +374,8 @@ export const useAppStore = create<AppState>()((set, get) => {
       const repoPath = activeRepoPath(get())
       if (!repoPath) return
       await run(async () => {
-        set({ branches: await gitApi.listBranches(repoPath) })
+        const branches = await gitApi.listBranches(repoPath)
+        if (stillOn(get(), repoPath)) set({ branches })
       })
     },
 
@@ -375,6 +389,7 @@ export const useAppStore = create<AppState>()((set, get) => {
           limit: 50,
           offset
         })
+        if (!stillOn(get(), repoPath)) return
         set({
           commits: append ? [...get().commits, ...result.commits] : result.commits,
           commitsHasMore: result.hasMore
@@ -402,7 +417,8 @@ export const useAppStore = create<AppState>()((set, get) => {
       set((s) => ({ loading: { ...s.loading, diffCount: s.loading.diffCount + 1 } }))
       await run(async () => {
         const diff = await gitApi.getFileDiff(repoPath, file.path, file.staged)
-        set({ diff })
+        // 连续点选文件时，只保留最后一次点选的结果
+        if (stillOn(get(), repoPath) && get().selectedFile === file) set({ diff })
       })
       set((s) => ({ loading: { ...s.loading, diffCount: Math.max(0, s.loading.diffCount - 1) } }))
     },
@@ -420,6 +436,7 @@ export const useAppStore = create<AppState>()((set, get) => {
       set((s) => ({ loading: { ...s.loading, isLoadingDetail: true } }))
       try {
         const detail = await gitApi.getCommitDetail(repoPath, hash)
+        if (!stillOn(get(), repoPath) || get().selectedCommitHash !== hash) return
         set({ commitDetail: detail, commitDetailError: null })
         // 默认选中第一个文件的 diff
         if (detail.files.length > 0) {
@@ -442,7 +459,14 @@ export const useAppStore = create<AppState>()((set, get) => {
       set((s) => ({ loading: { ...s.loading, diffCount: s.loading.diffCount + 1 } }))
       await run(async () => {
         const diff = await gitApi.getCommitFileDiff(repoPath, hash, filePath)
-        set({ diff })
+        const s = get()
+        if (
+          stillOn(s, repoPath) &&
+          s.selectedCommitHash === hash &&
+          s.selectedCommitFilePath === filePath
+        ) {
+          set({ diff })
+        }
       })
       set((s) => ({ loading: { ...s.loading, diffCount: Math.max(0, s.loading.diffCount - 1) } }))
     },
