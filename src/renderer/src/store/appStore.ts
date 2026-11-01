@@ -310,11 +310,15 @@ export const useAppStore = create<AppState>()((set, get) => {
     },
 
     // 别名 / 备注 / 所属工作区：只传需要改的字段，其余保持不变
+    // 返回是否保存成功：调用方（FormDialog）据此决定关闭对话框还是让用户重试
     updateRepoMeta: async (id, meta) => {
+      let done = false
       await run(async () => {
         await repoApi.updateRepoMeta(id, meta)
         set({ repos: await repoApi.listRepos() })
+        done = true
       })
+      return done
     },
 
     createWorkspace: async (name) => {

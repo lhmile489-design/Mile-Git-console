@@ -58,8 +58,8 @@ function createWindow(): void {
   mainWindow.on('closed', () => {
     mainWindowRef = null
   })
-  // Windows 关机 / 注销不会触发 before-quit，只能在窗口的会话结束事件里置位
-  mainWindow.on('query-session-end', markQuitting)
+  // Windows 关机 / 注销不会触发 before-quit，只能在窗口的会话结束事件里置位。
+  // Electron 33 只有 session-end（query-session-end 是 34+ 才有，33 的类型里不存在）
   mainWindow.on('session-end', markQuitting)
 
   const saveWindowState = trackWindowState(mainWindow)

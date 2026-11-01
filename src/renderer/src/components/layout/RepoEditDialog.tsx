@@ -37,7 +37,8 @@ function RepoEditDialog({ isOpen, onOpenChange, repo }: RepoEditDialogProps): Re
       submitLabel="保存"
       onSubmit={async () => {
         if (!repo) return false
-        await updateRepoMeta(repo.id, { alias: alias.trim(), note: note.trim(), workspaceId })
+        // 返回 false 时 FormDialog 保持打开，用户输入不丢
+        return updateRepoMeta(repo.id, { alias: alias.trim(), note: note.trim(), workspaceId })
       }}
     >
       <p className="ui-field-hint selectable" title={repo?.path}>

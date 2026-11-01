@@ -678,6 +678,76 @@ const STATUS_LETTER: Record<string, CommitFileChange['status']> = {
   C: 'added'
 }
 
+export interface ParsedFileStatus {
+  status: CommitFileChange['status']
+  oldPath?: string
+}
+
+// 解析 `git show --name-status -z` 的输出（纯函数，便于单测）。
+// -z 下路径不做转义（中文不再变成 "\344\270..."），段之间用 NUL 分隔：
+//   普通文件  M\0path\0
+//   重命名    R066\0old\0new\0
+export function parseNameStatusZ(raw: string): Map<string, ParsedFileStatus> {
+  const result = new Map<string, ParsedFileStatus>()
+  const parts = raw.split('\0')
+  for (let i = 0; i < parts.length; i++) {
+    // 多提交输出时条目间可能残留换行，去掉后再判断状态字母
+    const token = parts[i].replace(/^\r?\n+/, '')
+    if (!token) continue
+    const letter = token.charAt(0)
+    if (letter === 'R' || letter === 'C') {
+      const from = parts[++i]
+      const to = parts[++i]
+      if (!to) continue
+      result.set(to, {
+        status: STATUS_LETTER[letter] ?? 'modified',
+        ...(from ? { oldPath: from } : {})
+      })
+    } else {
+      const path = parts[++i]
+      if (!path) continue
+      result.set(path, { status: STATUS_LETTER[letter] ?? 'modified' })
+    }
+  }
+  return result
+}
+
+// 解析 `git show --numstat -z` 的输出（纯函数，便于单测）：
+//   普通文件  adds\tdels\tpath\0
+//   二进制    -\t-\tpath\0
+//   重命名    adds\tdels\t\0old\0new\0
+export function parseNumstatZ(
+  raw: string,
+  statusByPath: Map<string, ParsedFileStatus>
+): CommitFileChange[] {
+  const files: CommitFileChange[] = []
+  const parts = raw.split('\0')
+  for (let i = 0; i < parts.length; i++) {
+    const token = parts[i].replace(/^\r?\n+/, '')
+    if (!token) continue
+    const m = token.match(/^(\d+|-)\t(\d+|-)\t(.*)$/)
+    if (!m) continue
+    let filePath = m[3]
+    let renameFrom: string | undefined
+    if (!filePath) {
+      // 重命名 / 复制的路径在紧随其后的两个 NUL 段里
+      renameFrom = parts[++i]
+      filePath = parts[++i]
+      if (!filePath) continue
+    }
+    const st = statusByPath.get(filePath)
+    const oldPath = st?.oldPath ?? renameFrom
+    files.push({
+      path: filePath,
+      status: st?.status ?? 'modified',
+      ...(oldPath ? { oldPath } : {}),
+      additions: m[1] === '-' ? 0 : parseInt(m[1], 10),
+      deletions: m[2] === '-' ? 0 : parseInt(m[2], 10)
+    })
+  }
+  return files
+}
+
 export async function getCommitDetail(
   repoPath: string,
   hash: string
@@ -694,54 +764,14 @@ export async function getCommitDetail(
       .trim()
       .split(LOG_FIELD_SEP)
 
-    // name-status：状态字母 + 路径
-    const nsRaw = await git(repoPath).raw([
-      'show',
-      '--format=',
-      '--name-status',
-      hash
-    ])
-    const statusByPath = new Map<
-      string,
-      { status: CommitFileChange['status']; oldPath?: string }
-    >()
-    for (const line of nsRaw.split('\n')) {
-      if (!line.trim()) continue
-      const parts = line.split('\t')
-      const letter = parts[0].charAt(0)
-      if (letter === 'R' || letter === 'C') {
-        statusByPath.set(parts[2], {
-          status: STATUS_LETTER[letter] ?? 'modified',
-          oldPath: parts[1]
-        })
-      } else {
-        statusByPath.set(parts[1], {
-          status: STATUS_LETTER[letter] ?? 'modified'
-        })
-      }
-    }
+    // name-status：状态字母 + 路径。必须用 -z：不加时 git 会把非 ASCII 路径转义成
+    // "\344\270\255..."，且重命名的 numstat 会把两条路径合并成 "old => new" 一段
+    const nsRaw = await git(repoPath).raw(['show', '--format=', '--name-status', '-z', hash])
+    const statusByPath = parseNameStatusZ(nsRaw)
 
     // numstat：增删行数
-    const numRaw = await git(repoPath).raw([
-      'show',
-      '--format=',
-      '--numstat',
-      hash
-    ])
-    const files: CommitFileChange[] = []
-    for (const line of numRaw.split('\n')) {
-      const m = line.match(/^(\d+|-)\t(\d+|-)\t(.+)$/)
-      if (!m) continue
-      const filePath = m[3]
-      const st = statusByPath.get(filePath) ?? { status: 'modified' as const }
-      files.push({
-        path: filePath,
-        status: st.status,
-        ...(st.oldPath ? { oldPath: st.oldPath } : {}),
-        additions: m[1] === '-' ? 0 : parseInt(m[1], 10),
-        deletions: m[2] === '-' ? 0 : parseInt(m[2], 10)
-      })
-    }
+    const numRaw = await git(repoPath).raw(['show', '--format=', '--numstat', '-z', hash])
+    const files = parseNumstatZ(numRaw, statusByPath)
 
     const tags = parseTags(deco ?? '')
     return {

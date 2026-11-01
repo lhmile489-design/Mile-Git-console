@@ -276,8 +276,11 @@ npm install
 # 开发模式（Vite HMR + Electron 热重载）
 npm run dev
 
-# TypeScript 类型检查（不编译）
+# TypeScript 类型检查（不编译；分别检查 node / web 两份配置）
 npm run typecheck
+
+# 单元测试（vitest，含解析器与真实仓库集成测试）
+npm run test
 
 # ESLint 检查
 npm run lint
@@ -298,12 +301,13 @@ npm run dist:win
 
 每次任务完成后，必须满足以下条件才能汇报「完成」：
 
-1. `npm run typecheck` 无报错
-2. `npm run lint` 无 error（warning 可接受）
-3. `npm run dev` 能正常启动并截图/录屏展示功能
-4. 新增 IPC channel 已在 `docs/IPC契约.md`（或 `../docs/IPC契约.md`）中更新
-5. 新增/修改表结构已提供迁移脚本
-6. 新文件编码为 UTF-8 无 BOM（写完后回读确认无乱码）
+1. `npm run typecheck` 无报错（脚本会分别检查 `tsconfig.node.json` 与 `tsconfig.web.json`，不是空跑）
+2. `npm run test` 全部通过（改动 `src/main/git` 解析逻辑时必须同步补用例）
+3. `npm run lint` 无 error（warning 可接受）
+4. `npm run dev` 能正常启动并截图/录屏展示功能
+5. 新增 IPC channel 已在 `docs/IPC契约.md`（或 `../docs/IPC契约.md`）中更新
+6. 新增/修改表结构已提供迁移脚本
+7. 新文件编码为 UTF-8 无 BOM（写完后回读确认无乱码）
 
 ---
 
